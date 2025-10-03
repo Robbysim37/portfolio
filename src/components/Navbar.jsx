@@ -15,6 +15,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
 
 const nav = [
   { label: "Home", href: "#home", type: "section", id: "home" },
@@ -103,7 +104,12 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur">
+    <motion.header
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 12, ease: "easeOut" }}
+      className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur"
+    >
       <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Avatar + Name (scrolls to #home without hash) */}
         <Link
@@ -148,6 +154,6 @@ export default function Navbar() {
           </Sheet>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

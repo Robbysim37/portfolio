@@ -1,12 +1,14 @@
 "use client"
 
-
-
-import { useEffect } from "react";
+import { useEffect,useState } from "react";
+import Navbar from "@/components/Navbar";
 import Unlocked from "./pageStates/Unlocked";
 import Locked from "./pageStates/Locked";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+
+  const [locked,setLocked] = useState(true)
 
   // This useEffect prevents the navbar from displaying sections in the URL
   useEffect(() => {
@@ -24,6 +26,10 @@ export default function Home() {
   }, []);
 
   return (
-    <Locked/>
+    <>
+      {!locked && <Navbar />}
+      <Locked/>
+      <Button onClick={()=>{setLocked(false)}}></Button>
+    </>
   );
 }
