@@ -8,12 +8,10 @@ import { Button } from "./button";
 import { DEMO_SONG } from "@/app/utils/songs";
 
 /* ================================
-   1) Unlock sequence (no timing)
+   Unlock sequence
    ================================ */
-const TARGET_SEQUENCE = ["G", "A", "B", "Db"]; // pitch classes in order
-
+const TARGET_SEQUENCE = ["G", "A", "B", "Db"];
 const normalizePitch = (pc) => {
-  // enharmonics
   if (pc === "Bb") return "A#";
   if (pc === "Cb") return "B";
   if (pc === "B#") return "C";
@@ -25,7 +23,7 @@ const normalizePitch = (pc) => {
 const TARGET_NORM = TARGET_SEQUENCE.map(normalizePitch);
 
 /* ===========================================
-   Helpers (beats)
+   Helpers
    =========================================== */
 const durToBeats = (dur) => {
   switch (dur) {
@@ -35,21 +33,26 @@ const durToBeats = (dur) => {
     case "4n":  return 1;
     case "2n":  return 2;
     case "1n":  return 4;
-    default: {
-      const n = Number(dur);
-      return Number.isFinite(n) ? n : 0.5;
-    }
+    default: return 0.5;
   }
 };
+const songEndBeats = (events) =>
+  Math.max(...events.map((ev) => ev.time + durToBeats(ev.dur)));
 
-const songEndBeats = (events) => {
-  let end = 0;
-  for (const ev of events) {
-    const evEnd = ev.time + durToBeats(ev.dur);
-    if (evEnd > end) end = evEnd;
-  }
-  return end;
-};
+/* ===========================================
+   Hook: track window width
+   =========================================== */
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  return width;
+}
 
 /* ===========================================
    Component
@@ -64,7 +67,6 @@ export default function PianoUI() {
   const [isAuto, setIsAuto] = useState(false);
   const [error, setError] = useState("");
 
-  // visual highlighting
   const activeSetRef = useRef(new Set());
   const [activeNotes, setActiveNotes] = useState([]);
   const addActive = (midi) => {
@@ -130,19 +132,13 @@ export default function PianoUI() {
   const firstNote = MidiNumbers.fromNote("C4");
   const lastNote  = MidiNumbers.fromNote("B5");
 
-  // Sequence matcher (no timing)
   const progressRef = useRef(0);
   const stepProgress = (playedPc) => {
     const idx = progressRef.current;
     const expected = TARGET_NORM[idx];
-
-    if (playedPc === expected) {
-      progressRef.current += 1;
-    } else if (playedPc === TARGET_NORM[0]) {
-      progressRef.current = 1;
-    } else {
-      progressRef.current = 0;
-    }
+    if (playedPc === expected) progressRef.current += 1;
+    else if (playedPc === TARGET_NORM[0]) progressRef.current = 1;
+    else progressRef.current = 0;
 
     if (progressRef.current >= TARGET_NORM.length) {
       progressRef.current = 0;
@@ -151,33 +147,25 @@ export default function PianoUI() {
     return false;
   };
 
-  // Autoplay with start delay + visual highlights + transport cleanup
   const startAutoplay = () => {
     if (!started || !loaded || isAuto || !samplerRef.current) return;
     setIsAuto(true);
 
-    // clear any prior schedule & part
     if (schedIdRef.current !== null) {
       Tone.Transport.clear(schedIdRef.current);
       schedIdRef.current = null;
     }
     partRef.current?.dispose();
-
     Tone.Transport.stop();
     Tone.Transport.position = 0;
 
-    const startOffsetBeats = 0.25; // quarter-beat delay
+    const startOffsetBeats = 0.25;
     const endBeats = songEndBeats(DEMO_SONG) + startOffsetBeats;
 
     const part = new Tone.Part((time, ev) => {
-      // play audio
       samplerRef.current.triggerAttackRelease(ev.note, ev.dur, time);
-
-      // highlight on at note start
       const midi = Tone.Frequency(ev.note).toMidi();
       Tone.Draw.schedule(() => addActive(midi), time);
-
-      // schedule highlight off when note ends
       const durSec = Tone.Time(ev.dur).toSeconds();
       Tone.Draw.schedule(() => removeActive(midi), time + durSec);
     }, DEMO_SONG.map((ev) => [ev.time, ev]));
@@ -204,27 +192,19 @@ export default function PianoUI() {
 
   const toNoteName = (midiNumber) =>
     Tone.Frequency(midiNumber, "midi").toNote();
-
   const midiToPitchClass = (midi) =>
-    Tone.Frequency(midi, "midi").toNote().replace(/\d+/g, ""); // e.g. "Db"
-
+    Tone.Frequency(midi, "midi").toNote().replace(/\d+/g, "");
   const isBlackKey = (midi) => [1, 3, 6, 8, 10].includes(midi % 12);
 
   const handlePlayNote = (midiNumber) => {
     if (!started || !loaded || !samplerRef.current) return;
     if (isAuto) return;
-
     const note = toNoteName(midiNumber);
     const pc = midiToPitchClass(midiNumber);
-
     samplerRef.current.triggerAttack(note, Tone.now());
-
     const matched = stepProgress(normalizePitch(pc));
-    if (matched) {
-      startAutoplay();
-    }
+    if (matched) startAutoplay();
   };
-
   const handleStopNote = (midiNumber) => {
     if (!started || !loaded || !samplerRef.current) return;
     if (isAuto) return;
@@ -242,6 +222,13 @@ export default function PianoUI() {
     };
   }, []);
 
+  /* ========= Dynamic Piano width ========= */
+  const windowWidth = useWindowWidth();
+  let pianoWidth = 800; // default
+  if (windowWidth >= 650 && windowWidth < 768) {
+    pianoWidth = 500;   // between 650px and md breakpoint
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-black/5 border border-white/10 overflow-x-auto">
       {!started || !loaded ? (
@@ -254,9 +241,9 @@ export default function PianoUI() {
         noteRange={{ first: firstNote, last: lastNote }}
         playNote={handlePlayNote}
         stopNote={handleStopNote}
-        width={800}
+        width={pianoWidth}   // ✅ dynamic width
         disabled={!started || !loaded}
-        activeNotes={activeNotes}   // highlights during autoplay
+        activeNotes={activeNotes}
         renderNoteLabel={({ midiNumber }) => {
           const black = isBlackKey(midiNumber);
           return (
