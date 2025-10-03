@@ -1,3 +1,4 @@
+import { ModalProvider } from "@/components/ModalProvider";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
     <html lang="en" className="scroll-smooth">
       <body className="antialiased bg-background text-foreground">
         <Navbar />
-        <main>{children}</main>
+        <ModalProvider>
+          <main>{children}</main>
+        </ModalProvider>
       </body>
     </html>
   );

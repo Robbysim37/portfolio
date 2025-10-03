@@ -56,7 +56,7 @@ export function ModalProvider({ children }) {
             <p>If you're reading this, you've come across the portfolio website of Robert Lewis, 
                 If you'll indulge me, I would love to show you my works in a professional, but fun way.</p><br className="mb-16"/>
                 <p>You'll notice once this Modal is closed, you will only see a piano. Once you've played a certain 
-                song <span className="font-bold">(dont' worry, I will give you the notes)</span> you will gain access to the rest of the site.</p><br className="mb-16"/>
+                song <span className="font-bold">(don't worry, I will give you the notes)</span> you will gain access to the rest of the site.</p><br className="mb-16"/>
                 <p>from there, you can look through my projects, learn about me, and contact me if that is all you want to do...
                 But I have hidden some more easter eggs around the site that revolve around this piano. Can you find them all?</p><br className="mb-16"/>
                 <p>Thank you again for visiting my site, and I hope to hear from you soon! Good luck!</p>
