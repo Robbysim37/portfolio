@@ -76,7 +76,7 @@ export default function PianoUI() {
     const ro = new ResizeObserver(([entry]) => {
       // contentRect.width excludes padding already – no need to subtract
       const contentWidth = Math.floor(entry.contentRect.width);
-      const next = Math.max(320, contentWidth); // clamp to a sensible minimum
+      const next = Math.max(450, contentWidth); // clamp to a sensible minimum
 
       // avoid jitter / loops by only updating on meaningful change
       if (Math.abs(next - lastWidthRef.current) > 1) {
