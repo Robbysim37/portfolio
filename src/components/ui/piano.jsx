@@ -226,7 +226,7 @@ export default function PianoUI() {
   const windowWidth = useWindowWidth();
   let pianoWidth = 800; // default
   if (windowWidth >= 650 && windowWidth < 768) {
-    pianoWidth = 200;   // between 650px and md breakpoint
+    pianoWidth = 500;   // between 650px and md breakpoint
   }
 
   return (
@@ -241,7 +241,7 @@ export default function PianoUI() {
         noteRange={{ first: firstNote, last: lastNote }}
         playNote={handlePlayNote}
         stopNote={handleStopNote}
-        width={pianoWidth}   // ✅ dynamic width
+        width={500}   // ✅ dynamic width
         disabled={!started || !loaded}
         activeNotes={activeNotes}
         renderNoteLabel={({ midiNumber }) => {
