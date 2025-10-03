@@ -71,7 +71,7 @@ export default function PianoUI() {
     const handleResize = () => {
       const w = window.innerWidth;
       if (w >= 650 && w < 768) {
-        setPianoWidth(500);
+        setPianoWidth(400);
       } else {
         setPianoWidth(800);
       }
