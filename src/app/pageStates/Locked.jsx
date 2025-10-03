@@ -8,12 +8,12 @@ export default function Locked() {
     return(
         <div className="flex flex-col items-center justify-center w-[100vw] h-[100vh]">
             <WaveText className="mb-16 text-4xl space-x-4" text={"G A B C#"}/>
-            <div className="flex sm:hidden">
-                <RotatePhone/>
-            </div>
-            <Card className={"hidden sm:block w-fit h-fit"}>
+            
+            <Card className={"w-fit h-fit"}>
                 <CardContent className={"w-fit h-fit"}>
-                    <p className="flex [@media(min-width:700px)]:hidden">This is where the piano would go</p>
+                    <div className="flex sm:hidden">
+                        <RotatePhone/>
+                    </div>
 
                     <div className="hidden [@media(min-width:700px)]:block">
                     <PianoUI/>
