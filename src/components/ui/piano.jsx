@@ -40,21 +40,6 @@ const songEndBeats = (events) =>
   Math.max(...events.map((ev) => ev.time + durToBeats(ev.dur)));
 
 /* ===========================================
-   Hook: track window width
-   =========================================== */
-function useWindowWidth() {
-  const [width, setWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
-  );
-  useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-  return width;
-}
-
-/* ===========================================
    Component
    =========================================== */
 export default function PianoUI() {
@@ -80,6 +65,23 @@ export default function PianoUI() {
     setActiveNotes(Array.from(s));
   };
 
+  /* ========= Piano width (resize listener) ========= */
+  const [pianoWidth, setPianoWidth] = useState(800);
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w >= 650 && w < 768) {
+        setPianoWidth(500);
+      } else {
+        setPianoWidth(800);
+      }
+    };
+    handleResize(); // run once on mount
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  /* ========= Audio init ========= */
   const initAudio = async () => {
     try {
       setError("");
@@ -132,6 +134,7 @@ export default function PianoUI() {
   const firstNote = MidiNumbers.fromNote("C4");
   const lastNote  = MidiNumbers.fromNote("B5");
 
+  /* ========= Unlock sequence ========= */
   const progressRef = useRef(0);
   const stepProgress = (playedPc) => {
     const idx = progressRef.current;
@@ -147,6 +150,7 @@ export default function PianoUI() {
     return false;
   };
 
+  /* ========= Autoplay ========= */
   const startAutoplay = () => {
     if (!started || !loaded || isAuto || !samplerRef.current) return;
     setIsAuto(true);
@@ -190,6 +194,7 @@ export default function PianoUI() {
     Tone.Transport.start();
   };
 
+  /* ========= Note handling ========= */
   const toNoteName = (midiNumber) =>
     Tone.Frequency(midiNumber, "midi").toNote();
   const midiToPitchClass = (midi) =>
@@ -222,17 +227,11 @@ export default function PianoUI() {
     };
   }, []);
 
-  /* ========= Dynamic Piano width ========= */
-  const windowWidth = useWindowWidth();
-  let pianoWidth = 800; // default
-  if (windowWidth >= 650 && windowWidth < 768) {
-    pianoWidth = 500;   // between 650px and md breakpoint
-  }
-
+  /* ========= Render ========= */
   return (
     <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-black/5 border border-white/10 overflow-x-auto">
       {!started || !loaded ? (
-        <Button onClick={initAudio} className={"my-4"}>
+        <Button onClick={initAudio} className="my-4">
           Click to enable audio & load piano
         </Button>
       ) : <div/> }
@@ -241,7 +240,7 @@ export default function PianoUI() {
         noteRange={{ first: firstNote, last: lastNote }}
         playNote={handlePlayNote}
         stopNote={handleStopNote}
-        width={500}   // ✅ dynamic width
+        width={pianoWidth}   // ✅ dynamic width based on window.innerWidth
         disabled={!started || !loaded}
         activeNotes={activeNotes}
         renderNoteLabel={({ midiNumber }) => {
