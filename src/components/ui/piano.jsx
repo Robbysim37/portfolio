@@ -131,8 +131,8 @@ export default function PianoUI() {
     }
   };
 
-  const firstNote = MidiNumbers.fromNote("C4");
-  const lastNote  = MidiNumbers.fromNote("B5");
+  const firstNote = MidiNumbers.fromNote("D4");
+  const lastNote  = MidiNumbers.fromNote("A5");
 
   /* ========= Unlock sequence ========= */
   const progressRef = useRef(0);
