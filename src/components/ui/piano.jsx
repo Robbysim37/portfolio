@@ -226,7 +226,7 @@ export default function PianoUI() {
   const windowWidth = useWindowWidth();
   let pianoWidth = 800; // default
   if (windowWidth >= 650 && windowWidth < 768) {
-    pianoWidth = 300;   // between 650px and md breakpoint
+    pianoWidth = 200;   // between 650px and md breakpoint
   }
 
   return (
