@@ -34,9 +34,9 @@ export default function Home() {
       <section id="piano" className="w-full h-[100vh] bg-blue-500 flex justify-center">
         <Card className={"w-fit h-fit"}>
           <CardContent className={"w-fit h-fit"}>
-            <p className="flex md:hidden">This is where the piano would go</p>
+            <p className="flex [@media(min-width:700px)]:hidden">This is where the piano would go</p>
 
-            <div className="hidden md:block">
+            <div className="hidden [@media(min-width:700px)]:block">
               <PianoUI/>
             </div>
           </CardContent>
