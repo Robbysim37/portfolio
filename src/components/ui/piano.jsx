@@ -91,7 +91,7 @@ export default function PianoUI() {
     if (el) {
       const w = Math.floor(el.clientWidth);
       lastWidthRef.current = w;
-      setPianoWidth(Math.max(320, w));
+      setPianoWidth(Math.max(450, w));
     }
 
     return () => ro.disconnect();
