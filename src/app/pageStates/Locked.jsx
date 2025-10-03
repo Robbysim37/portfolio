@@ -9,7 +9,7 @@ export default function Locked() {
         <div className="flex flex-col items-center justify-center w-[100vw] h-[100vh]">
             <WaveText className="mb-16 text-4xl space-x-4" text={"G A B C#"}/>
             
-            <Card className={"w-fit h-fit"}>
+            <Card className={"h-fit"}>
                 <CardContent className={"w-fit h-fit"}>
                     <div className="flex sm:hidden">
                         <RotatePhone/>

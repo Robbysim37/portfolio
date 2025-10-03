@@ -8,7 +8,7 @@ return (<div className="flex-col justify-center">
         
       </section>
       <section id="piano" className="w-full h-[100vh] flex justify-center">
-        <Card className={"w-fit h-fit"}>
+        <Card className={"h-fit"}>
           <CardContent className={"w-fit h-fit"}>
             <p className="flex [@media(min-width:700px)]:hidden">This is where the piano would go</p>
 

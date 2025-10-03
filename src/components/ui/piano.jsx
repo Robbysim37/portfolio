@@ -65,20 +65,36 @@ export default function PianoUI() {
     setActiveNotes(Array.from(s));
   };
 
-  /* ========= Piano width (resize listener) ========= */
+  /* ========= Piano width (ResizeObserver) ========= */
+  const wrapperRef = useRef(null);
   const [pianoWidth, setPianoWidth] = useState(800);
+  const lastWidthRef = useRef(0);
+
   useEffect(() => {
-    const handleResize = () => {
-      const w = window.innerWidth;
-      if (w >= 650 && w < 768) {
-        setPianoWidth(400);
-      } else {
-        setPianoWidth(800);
+    if (!wrapperRef.current) return;
+
+    const ro = new ResizeObserver(([entry]) => {
+      // contentRect.width excludes padding already – no need to subtract
+      const contentWidth = Math.floor(entry.contentRect.width);
+      const next = Math.max(320, contentWidth); // clamp to a sensible minimum
+
+      // avoid jitter / loops by only updating on meaningful change
+      if (Math.abs(next - lastWidthRef.current) > 1) {
+        lastWidthRef.current = next;
+        setPianoWidth(next);
       }
-    };
-    handleResize(); // run once on mount
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    });
+
+    ro.observe(wrapperRef.current);
+    // kick once for SSR/hydration cases
+    const el = wrapperRef.current;
+    if (el) {
+      const w = Math.floor(el.clientWidth);
+      lastWidthRef.current = w;
+      setPianoWidth(Math.max(320, w));
+    }
+
+    return () => ro.disconnect();
   }, []);
 
   /* ========= Audio init ========= */
@@ -229,18 +245,21 @@ export default function PianoUI() {
 
   /* ========= Render ========= */
   return (
-    <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-black/5 border border-white/10 overflow-x-auto">
+    <div
+      ref={wrapperRef}
+      className="w-full max-w-4xl mx-auto p-4 rounded-2xl bg-black/5 border border-white/10 overflow-x-hidden"
+    >
       {!started || !loaded ? (
         <Button onClick={initAudio} className="my-4">
           Click to enable audio & load piano
         </Button>
-      ) : <div/> }
+      ) : <div />}
 
       <Piano
         noteRange={{ first: firstNote, last: lastNote }}
         playNote={handlePlayNote}
         stopNote={handleStopNote}
-        width={500}   // ✅ dynamic width based on window.innerWidth
+        width={pianoWidth}
         disabled={!started || !loaded}
         activeNotes={activeNotes}
         renderNoteLabel={({ midiNumber }) => {
