@@ -1,4 +1,4 @@
-const DEMO_SONG = [
+export const DEMO_SONG = [
   // G A B Db
   { time: 0.0,  note: "G4",  dur: "8n" },
   { time: 0.25, note: "A4",  dur: "8n" },
@@ -65,9 +65,9 @@ const DEMO_SONG = [
   { time: 10.5, note: "Gb5", dur: "8n" },
   { time: 10.75,note: "Ab5", dur: "8n" },
 
-  // A Bb B C  (you can adjust these times as desired)
+  // A Bb B C
   { time: 11.75, note: "A4",  dur: "8n" },
   { time: 12.0,  note: "Bb4", dur: "8n" },
   { time: 12.25, note: "B4",  dur: "8n" },
-  { time: 12.5,  note: "C5",  dur: "2n" }, // long final note
+  { time: 12.5,  note: "C5",  dur: "2n" },
 ];
