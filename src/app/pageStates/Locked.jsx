@@ -6,7 +6,7 @@ import WaveText from "@/components/WaveText"
 
 export default function Locked() {
     return(
-        <div className="flex flex-col items-center justify-center w-[100vw] h-[100vh]">
+        <div className="flex flex-col items-center justify-center w-[100vw] h-[100vh] mt-16">
             <WaveText className="mb-16 text-4xl space-x-4" text={"G A B C#"}/>
             
             <Card className={"h-fit"}>
