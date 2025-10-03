@@ -240,7 +240,7 @@ export default function PianoUI() {
         noteRange={{ first: firstNote, last: lastNote }}
         playNote={handlePlayNote}
         stopNote={handleStopNote}
-        width={400}   // ✅ dynamic width based on window.innerWidth
+        width={500}   // ✅ dynamic width based on window.innerWidth
         disabled={!started || !loaded}
         activeNotes={activeNotes}
         renderNoteLabel={({ midiNumber }) => {
