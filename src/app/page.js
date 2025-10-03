@@ -24,6 +24,6 @@ export default function Home() {
   }, []);
 
   return (
-    <Unlocked/>
+    <Locked/>
   );
 }
