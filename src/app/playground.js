@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { useModal } from "@/components/ModalProvider"
+import { useModal } from "@/app/providers/ModalProvider"
 import PianoUI from "@/components/ui/piano"
 
 export default function Playground() {

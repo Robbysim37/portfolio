@@ -10,8 +10,8 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card,CardHeader,CardTitle,CardContent,CardFooter } from "./ui/card";
-import { Button } from "./ui/button";
+import { Card,CardHeader,CardTitle,CardContent,CardFooter } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 
 const ModalContext = createContext(null);
 

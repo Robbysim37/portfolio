@@ -1,16 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Piano, MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
 import { Button } from "./button";
-import { DEMO_SONG } from "@/app/utils/songs";
+import { SONGS } from "@/app/utils/songs";
+import { useSongsPlayed } from "../../app/providers/SongsPlayedProvider";
 
 /* ================================
-   Unlock sequence
+   Exact-note Unlock Sequences
    ================================ */
-const TARGET_SEQUENCE = ["G", "A", "B", "Db"];
+const SEQUENCES = [
+  { key: "song1", seq: ["G4", "A4", "B4", "Db5"] }, 
+  { key: "song2", seq: ["C5","A#4","A4","C5","A#4","A4","C5","G4"] },
+  { key: "song3", seq: ["E5","E5","E5","C5","E5","G5","G4"] },
+  { key: "song4", seq: ["D5","B4","G4","E4","D5","B4","G4","B4","G4","B4"] },
+  { key: "song5", seq: ["D4","D#4","E4","C5","E4","C5","E4","C5",] },
+];
+
 const normalizePitch = (pc) => {
   if (pc === "Bb") return "A#";
   if (pc === "Cb") return "B";
@@ -20,28 +28,42 @@ const normalizePitch = (pc) => {
   if (pc === "C#") return "Db";
   return pc;
 };
-const TARGET_NORM = TARGET_SEQUENCE.map(normalizePitch);
 
-/* ===========================================
-   Helpers
-   =========================================== */
-const durToBeats = (dur) => {
-  switch (dur) {
-    case "32n": return 0.125;
-    case "16n": return 0.25;
-    case "8n":  return 0.5;
-    case "4n":  return 1;
-    case "2n":  return 2;
-    case "1n":  return 4;
-    default: return 0.5;
-  }
+const midiToPcOct = (midi) => {
+  const note = Tone.Frequency(midi, "midi").toNote(); // e.g., "C#4"
+  const rawPc = note.replace(/\d+/g, "");
+  const pc = normalizePitch(rawPc);
+  const oct = Number(note.match(/\d+/)?.[0] ?? 0);
+  return { pc, oct, note: `${pc}${oct}` };
 };
-const songEndBeats = (events) =>
-  Math.max(...events.map((ev) => ev.time + durToBeats(ev.dur)));
 
-/* ===========================================
-   Component
-   =========================================== */
+const SEQS_NORM = SEQUENCES.map((s) => ({
+  key: s.key,
+  seq: s.seq.map((step) => {
+    const m = step.match(/^([A-G][b#]?)(\d+)$/);
+    const pc = normalizePitch(m[1]);
+    const oct = Number(m[2]);
+    return `${pc}${oct}`;
+  }),
+}));
+
+const durToSeconds = (dur) => Tone.Time(dur).toSeconds();
+const songEndSeconds = (events) =>
+  Math.max(...events.map((ev) => (ev.time ?? 0) + durToSeconds(ev.dur)));
+
+/* ===== Helper: count white keys in [first, last] ===== */
+const isWhiteMidi = (m) => {
+  const pc = m % 12; // C=0
+  return [0, 2, 4, 5, 7, 9, 11].includes(pc);
+};
+const countWhiteKeys = (firstMidi, lastMidi) => {
+  let c = 0;
+  for (let m = firstMidi; m <= lastMidi; m++) {
+    if (isWhiteMidi(m)) c++;
+  }
+  return c;
+};
+
 export default function PianoUI() {
   const samplerRef = useRef(null);
   const partRef = useRef(null);
@@ -52,6 +74,13 @@ export default function PianoUI() {
   const [isAuto, setIsAuto] = useState(false);
   const [error, setError] = useState("");
 
+  const { markDone } = useSongsPlayed();
+
+  // === Note range (now ends at B5 as requested) ===
+  const firstNote = MidiNumbers.fromNote("D4");
+  const lastNote = MidiNumbers.fromNote("B5");
+
+  // === Active keys UI ===
   const activeSetRef = useRef(new Set());
   const [activeNotes, setActiveNotes] = useState([]);
   const addActive = (midi) => {
@@ -65,37 +94,16 @@ export default function PianoUI() {
     setActiveNotes(Array.from(s));
   };
 
-  /* ========= Piano width (ResizeObserver) ========= */
-  const wrapperRef = useRef(null);
-  const [pianoWidth, setPianoWidth] = useState(800);
-  const lastWidthRef = useRef(0);
-
-  useEffect(() => {
-    if (!wrapperRef.current) return;
-
-    const ro = new ResizeObserver(([entry]) => {
-      // contentRect.width excludes padding already – no need to subtract
-      const contentWidth = Math.floor(entry.contentRect.width);
-      const next = Math.max(450, contentWidth); // clamp to a sensible minimum
-
-      // avoid jitter / loops by only updating on meaningful change
-      if (Math.abs(next - lastWidthRef.current) > 1) {
-        lastWidthRef.current = next;
-        setPianoWidth(next);
-      }
-    });
-
-    ro.observe(wrapperRef.current);
-    // kick once for SSR/hydration cases
-    const el = wrapperRef.current;
-    if (el) {
-      const w = Math.floor(el.clientWidth);
-      lastWidthRef.current = w;
-      setPianoWidth(Math.max(450, w));
-    }
-
-    return () => ro.disconnect();
-  }, []);
+  // === Sizing: width from white-key count (expand, scroll if needed) ===
+  const WHITE_KEY_PX = 28; // adjust if you want larger/smaller keys
+  const whiteCount = useMemo(
+    () => countWhiteKeys(firstNote, lastNote),
+    [firstNote, lastNote]
+  );
+  const pianoWidth = useMemo(
+    () => Math.max(whiteCount * WHITE_KEY_PX, 850), // min width guard
+    [whiteCount]
+  );
 
   /* ========= Audio init ========= */
   const initAudio = async () => {
@@ -147,72 +155,95 @@ export default function PianoUI() {
     }
   };
 
-  const firstNote = MidiNumbers.fromNote("D4");
-  const lastNote  = MidiNumbers.fromNote("A5");
+  /* ================================
+     Exact-note sequence progress
+     ================================ */
+  const buildInitialProgressMap = () =>
+    Object.fromEntries(SEQS_NORM.map((s) => [s.key, 0]));
+  const progressMapRef = useRef(buildInitialProgressMap());
 
-  /* ========= Unlock sequence ========= */
-  const progressRef = useRef(0);
-  const stepProgress = (playedPc) => {
-    const idx = progressRef.current;
-    const expected = TARGET_NORM[idx];
-    if (playedPc === expected) progressRef.current += 1;
-    else if (playedPc === TARGET_NORM[0]) progressRef.current = 1;
-    else progressRef.current = 0;
+  const stepProgressAll = (midiNumber) => {
+    const { note } = midiToPcOct(midiNumber); // e.g., "Db4"
+    let winner = null;
 
-    if (progressRef.current >= TARGET_NORM.length) {
-      progressRef.current = 0;
-      return true;
+    for (const { key, seq } of SEQS_NORM) {
+      let idx = progressMapRef.current[key];
+      const expected = seq[idx];
+
+      if (note === expected) {
+        idx += 1;
+      } else if (note === seq[0]) {
+        idx = 1;
+      } else {
+        idx = 0;
+      }
+
+      progressMapRef.current[key] = idx;
+      if (idx >= seq.length && winner == null) winner = key;
     }
-    return false;
+
+    if (winner) progressMapRef.current = buildInitialProgressMap();
+    return winner;
   };
 
-  /* ========= Autoplay ========= */
-  const startAutoplay = () => {
+  /* ========= Autoplay (flip boolean on start) ========= */
+  const startAutoplayFor = (songKey) => {
     if (!started || !loaded || isAuto || !samplerRef.current) return;
-    setIsAuto(true);
 
+    const events = SONGS[songKey];
+    if (!events?.length) return;
+
+    setIsAuto(true);
+    // Flip the provider boolean as soon as autoplay begins
+    markDone(songKey);
+
+    // Clear any previous schedule/part
     if (schedIdRef.current !== null) {
       Tone.Transport.clear(schedIdRef.current);
       schedIdRef.current = null;
     }
-    partRef.current?.dispose();
+    if (partRef.current) {
+      partRef.current.dispose();
+      partRef.current = null;
+    }
     Tone.Transport.stop();
     Tone.Transport.position = 0;
 
-    const startOffsetBeats = 0.25;
-    const endBeats = songEndBeats(DEMO_SONG) + startOffsetBeats;
+    const startOffsetSec = 0.25;
+    const endSec = songEndSeconds(events) + startOffsetSec;
 
     const part = new Tone.Part((time, ev) => {
       samplerRef.current.triggerAttackRelease(ev.note, ev.dur, time);
       const midi = Tone.Frequency(ev.note).toMidi();
-      Tone.Draw.schedule(() => addActive(midi), time);
       const durSec = Tone.Time(ev.dur).toSeconds();
+      Tone.Draw.schedule(() => addActive(midi), time);
       Tone.Draw.schedule(() => removeActive(midi), time + durSec);
-    }, DEMO_SONG.map((ev) => [ev.time, ev]));
+    }, events.map((ev) => [(ev.time ?? 0) + startOffsetSec, ev]));
 
-    part.start(startOffsetBeats);
-    part.stop(endBeats);
+    part.start(0);
+    part.stop(endSec);
     partRef.current = part;
 
     schedIdRef.current = Tone.Transport.scheduleOnce(() => {
       setIsAuto(false);
       activeSetRef.current.clear();
       setActiveNotes([]);
-      partRef.current?.dispose();
-      partRef.current = null;
+      if (partRef.current) {
+        partRef.current.dispose();
+        partRef.current = null;
+      }
       if (schedIdRef.current !== null) {
         Tone.Transport.clear(schedIdRef.current);
         schedIdRef.current = null;
       }
       Tone.Transport.stop();
-    }, endBeats);
+    }, endSec);
 
     Tone.Transport.start();
   };
 
   /* ========= Note handling ========= */
-  const toNoteName = (midiNumber) =>
-    Tone.Frequency(midiNumber, "midi").toNote();
+  const toNoteName = (midiNumber) => Tone.Frequency(midiNumber, "midi").toNote();
   const midiToPitchClass = (midi) =>
     Tone.Frequency(midi, "midi").toNote().replace(/\d+/g, "");
   const isBlackKey = (midi) => [1, 3, 6, 8, 10].includes(midi % 12);
@@ -220,71 +251,84 @@ export default function PianoUI() {
   const handlePlayNote = (midiNumber) => {
     if (!started || !loaded || !samplerRef.current) return;
     if (isAuto) return;
-    const note = toNoteName(midiNumber);
-    const pc = midiToPitchClass(midiNumber);
-    samplerRef.current.triggerAttack(note, Tone.now());
-    const matched = stepProgress(normalizePitch(pc));
-    if (matched) startAutoplay();
+
+    const noteName = toNoteName(midiNumber);
+    samplerRef.current.triggerAttack(noteName, Tone.now());
+
+    const matchedKey = stepProgressAll(midiNumber);
+    if (matchedKey) startAutoplayFor(matchedKey);
   };
+
   const handleStopNote = (midiNumber) => {
     if (!started || !loaded || !samplerRef.current) return;
     if (isAuto) return;
-    const note = toNoteName(midiNumber);
-    samplerRef.current.triggerRelease(note, Tone.now());
+    const noteName = toNoteName(midiNumber);
+    samplerRef.current.triggerRelease(noteName, Tone.now());
   };
 
+  /* ========= Cleanup ========= */
   useEffect(() => {
     return () => {
       if (schedIdRef.current !== null) {
         Tone.Transport.clear(schedIdRef.current);
         schedIdRef.current = null;
       }
-      partRef.current?.dispose();
+      if (partRef.current) {
+        partRef.current.dispose();
+        partRef.current = null;
+      }
+      try { Tone.Transport.stop(); } catch {}
+      try { samplerRef.current?.dispose(); } catch {}
     };
   }, []);
 
   /* ========= Render ========= */
   return (
-    <div
-      ref={wrapperRef}
-      className="w-full max-w-4xl mx-auto p-4 rounded-2xl bg-black/5 border border-white/10 overflow-x-hidden"
-    >
+    <div className="w-full mx-auto p-4 rounded-2xl bg-black/5 border border-white/10">
       {!started || !loaded ? (
         <Button onClick={initAudio} className="my-4">
           Click to enable audio & load piano
         </Button>
-      ) : <div />}
+      ) : null}
 
-      <Piano
-        noteRange={{ first: firstNote, last: lastNote }}
-        playNote={handlePlayNote}
-        stopNote={handleStopNote}
-        width={pianoWidth}
-        disabled={!started || !loaded}
-        activeNotes={activeNotes}
-        renderNoteLabel={({ midiNumber }) => {
-          const black = isBlackKey(midiNumber);
-          return (
-            <div
-              style={{
-                height: "100%",
-                width: "100%",
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "center",
-                paddingBottom: black ? 6 : 8,
-                pointerEvents: "none",
-                fontSize: 11,
-                fontWeight: 600,
-                color: black ? "#fff" : "#000",
-                textShadow: black ? "0 1px 2px rgba(0,0,0,.7)" : "none",
-              }}
-            >
-              {midiToPitchClass(midiNumber)}
-            </div>
-          );
-        }}
-      />
+      {error && <div className="mt-2 text-sm text-red-500">{error}</div>}
+
+      {/* Scroll container so wide ranges don't compress */}
+      <div className="w-full overflow-x-auto">
+        <div className="inline-block">
+          <Piano
+            noteRange={{ first: firstNote, last: lastNote }}
+            playNote={handlePlayNote}
+            stopNote={handleStopNote}
+            width={pianoWidth}
+            disabled={!started || !loaded}
+            activeNotes={activeNotes}
+            renderNoteLabel={({ midiNumber }) => {
+              const black = isBlackKey(midiNumber);
+              return (
+                <div
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                    paddingBottom: black ? 6 : 8,
+                    pointerEvents: "none",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: black ? "#fff" : "#000",
+                    textShadow: black ? "0 1px 2px rgba(0,0,0,.7)" : "none",
+                    lineHeight: 1,
+                  }}
+                >
+                  {midiToPitchClass(midiNumber)}
+                </div>
+              );
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

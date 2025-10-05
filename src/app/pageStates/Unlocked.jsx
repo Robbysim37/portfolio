@@ -1,11 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import PianoUI from "@/components/ui/piano";
+import HomeSection from "../sections/homeSection";
 
 export default function Unlocked() {
 return (<div className="flex-col justify-center">
 
       <section id="home" className="min-h-screen">
-        
+        <HomeSection/>
       </section>
       <section id="piano" className="w-full h-[100vh] flex justify-center">
         <Card className={"h-fit"}>

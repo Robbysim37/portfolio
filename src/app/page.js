@@ -27,9 +27,9 @@ export default function Home() {
 
   return (
     <>
-      {!locked && <Navbar />}
-      <Locked/>
-      <Button onClick={()=>{setLocked(false)}}></Button>
+      <Navbar />
+      <Unlocked/>
+      
     </>
   );
 }
