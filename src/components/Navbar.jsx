@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import useTrackScroll from "@/app/utils/trackScroll"; // custom hook
+import useTrackScroll from "@/app/utils/trackScroll";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -26,7 +26,7 @@ const nav = [
   { label: "Projects", href: "/projects", type: "route" },
 ];
 
-function NavA({ href, children, isActive, onClick }) {
+function NavA({ href, children, isActive, onClick, ...rest }) {
   return (
     <Link
       href={href}
@@ -37,10 +37,26 @@ function NavA({ href, children, isActive, onClick }) {
           ? "text-primary after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-current after:content-['']"
           : "text-[#E0E1DD] hover:text-primary"
       )}
+      {...rest}
     >
       {children}
     </Link>
   );
+}
+
+// --- Helper: smooth scroll with fixed-header offset
+function scrollToIdWithOffset(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  // Try to measure the header; fall back to 64px (h-16)
+  const header =
+    document.querySelector("header") || document.querySelector('[data-site-header]');
+  const headerH = header?.getBoundingClientRect().height ?? 64;
+
+  const y =
+    el.getBoundingClientRect().top + window.pageYOffset - headerH - 1; // -1 helps ensure the section top fully clears
+  window.scrollTo({ top: y, behavior: "smooth" });
 }
 
 export default function Navbar() {
@@ -48,32 +64,37 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // avoid hydration flicker for active styles
   useEffect(() => setMounted(true), []);
 
-  // always call hook; enable only on "/"
   const activeId = useTrackScroll(
     ["home", "piano", "skills", "contact"],
     100,
     pathname === "/"
   );
 
-  // smooth-scroll section links; keep URL clean (no hash)
   const onSectionClick = (id, closeSheet) => (e) => {
     if (pathname === "/") {
       e.preventDefault();
       closeSheet?.();
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState(null, "", "/");
-      }
+      // Use offset scrolling instead of scrollIntoView
+      scrollToIdWithOffset(id);
+      // Keep clean URL
+      window.history.replaceState(null, "", "/");
     } else {
       closeSheet?.();
-      sessionStorage.setItem("scrollTarget", id); // Home page will scroll on mount
-      // allow Link to navigate to "/"
+      sessionStorage.setItem("scrollTarget", id);
     }
   };
+
+  // Auto-scroll to a saved target when landing on "/"
+  useEffect(() => {
+    if (pathname !== "/") return;
+    const id = sessionStorage.getItem("scrollTarget");
+    if (!id) return;
+    sessionStorage.removeItem("scrollTarget");
+    // wait a frame so sections are mounted & header measured
+    requestAnimationFrame(() => scrollToIdWithOffset(id));
+  }, [pathname]);
 
   const renderLink = (item, closeSheet) => {
     if (item.type === "section") {
@@ -81,21 +102,25 @@ export default function Navbar() {
       return (
         <NavA
           key={item.label}
-          href="/" // always "/" so URL stays clean
+          href="/"
           isActive={isActive}
-          onClick={onSectionClick(item.id, closeSheet ? () => setOpen(false) : undefined)}
+          aria-current={isActive ? "page" : undefined}
+          onClick={onSectionClick(
+            item.id,
+            closeSheet ? () => setOpen(false) : undefined
+          )}
         >
           {item.label}
         </NavA>
       );
     }
-
     const isActive = pathname === item.href;
     return (
       <NavA
         key={item.label}
         href={item.href}
         isActive={isActive}
+        aria-current={isActive ? "page" : undefined}
         onClick={closeSheet ? () => setOpen(false) : undefined}
       >
         {item.label}
@@ -105,18 +130,21 @@ export default function Navbar() {
 
   return (
     <motion.header
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 12, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur"
+      initial={{ y: "-100%", opacity: 1 }}
+      animate={{ y: 0 }}
+      transition={{
+        type: "spring",
+        stiffness: 420,
+        damping: 14,
+        mass: 0.8,
+        bounce: 0.75,
+        delay: 12,
+      }}
+      className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur will-change-transform"
     >
       <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left: Avatar + Name (scrolls to #home without hash) */}
-        <Link
-          href="/"
-          onClick={onSectionClick("home")}
-          className="flex items-center gap-3"
-        >
+        {/* Left: Avatar + Name */}
+        <Link href="/" onClick={onSectionClick("home")} className="flex items-center gap-3">
           <Avatar className="h-10 w-10 rounded-full">
             {/* <AvatarImage src="/logo.png" alt="Logo" /> */}
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold flex items-center justify-center">
@@ -146,7 +174,7 @@ export default function Navbar() {
               <div className="mt-4 flex flex-col gap-2">
                 {nav.map((item) => (
                   <SheetClose asChild key={item.label}>
-                    {renderLink(item, /* closeSheet */ true)}
+                    {renderLink(item, true)}
                   </SheetClose>
                 ))}
               </div>
