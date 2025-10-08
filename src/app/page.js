@@ -69,9 +69,9 @@ export default function Home() {
             
             {isUnlocked ? <ZeldaCard/> : <LockedCard/>}
             {song2Played ? <WallaceCard/> : <LockedCard clue={'My "Lightbulb" moment!'}/>}
-            {song3Played ? <MarioCard/> : <LockedCard clue={"Look around my hobbies..."}/>}
+            {song3Played ? <MarioCard/> : <LockedCard clue={"I do like games..."}/>}
             {song4Played ? <ChocoboCard/> : <LockedCard clue={"Try very hard to be mean :("}/>}
-            {song5Played ? <EntertainerCard/> : <LockedCard clue={"WIP"}/>}
+            {song5Played ? <EntertainerCard/> : <LockedCard clue={"this website is one of my projects!"}/>}
             
           </div>}
         </section>

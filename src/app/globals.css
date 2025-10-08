@@ -42,50 +42,51 @@
 }
 
 @layer base {
-  /* 🌞 LIGHT MODE (root) */
-  :root {
-    --background: #f3f8fc;
-    --foreground: #0d1b2a;
+    /* 🌞 LIGHT MODE (root) */
+    :root {
+    --background: #dceeff;
+    --foreground: #1b1b1b;
 
     --card: #ffffff;
-    --card-foreground: #1b263b;
+    --card-foreground: #1a1a1a;
 
     --popover: #ffffff;
-    --popover-foreground: #0d1b2a;
+    --popover-foreground: #1a1a1a;
 
-    --primary: #00b4d8; /* aqua highlight */
-    --primary-foreground: #03045e;
+    /* main accent spectrum: soft aqua → purple */
+    --primary: #5390d9; /* calm sky blue */
+    --primary-foreground: #ffffff;
 
-    --secondary: #0077b6;
+    --secondary: #7400b8; /* deep violet anchor */
     --secondary-foreground: #ffffff;
 
     --muted: #e2e8f0;
     --muted-foreground: #475569;
 
-    --accent: #90a7c3;
-    --accent-foreground: #0d1b2a;
+    --accent: #64dfdf; /* fresh teal accent */
+    --accent-foreground: #003049;
 
     --destructive: #e63946;
     --border: #cbd5e1;
     --input: #cbd5e1;
-    --ring: #00b4d8;
+    --ring: #4ea8de;
 
-    /* charts */
-    --chart-1: oklch(0.65 0.19 240);
-    --chart-2: oklch(0.72 0.18 180);
-    --chart-3: oklch(0.78 0.18 80);
-    --chart-4: oklch(0.62 0.26 310);
-    --chart-5: oklch(0.64 0.25 20);
+    /* charts (from darkest → lightest across your gradient) */
+    --chart-1: #7400b8;
+    --chart-2: #6930c3;
+    --chart-3: #5e60ce;
+    --chart-4: #48bfe3;
+    --chart-5: #72efdd;
 
     /* sidebar and related */
     --sidebar: #f1f5f9;
-    --sidebar-foreground: #0d1b2a;
-    --sidebar-primary: #00b4d8;
+    --sidebar-foreground: #1e293b;
+    --sidebar-primary: #5390d9;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #e2e8f0;
-    --sidebar-accent-foreground: #0d1b2a;
-    --sidebar-border: rgba(0, 0, 0, 0.1);
-    --sidebar-ring: #00b4d8;
+    --sidebar-accent: #72efdd;
+    --sidebar-accent-foreground: #003049;
+    --sidebar-border: #e2e8f0;
+    --sidebar-ring: #48bfe3;
   }
 
   /* 🌙 DARK MODE */

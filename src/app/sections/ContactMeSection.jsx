@@ -9,26 +9,32 @@ export default function ContactMe() {
   const sectionRef = useRef(null);
   const jumperRef = useRef(null);
   const cooldownRef = useRef(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
 
-  // Compute random offsets, but restrict by 300 px padding per side
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [hits, setHits] = useState(0);
+
+  // Compute random offsets, but restrict by 75 px padding per side
   const pickRandomOffsets = () => {
     const container = sectionRef.current;
     const jumper = jumperRef.current;
     if (!container || !jumper) return { x: 0, y: 0 };
 
-    const edgeBuffer = 50; // ↓↓↓ new restriction zone ↓↓↓
+    const edgeBuffer = 75;
     const padding = 8;
     const cRect = container.getBoundingClientRect();
     const jRect = jumper.getBoundingClientRect();
 
-    // Reduce total available movement area
-    const usableWidth = Math.max(0, cRect.width - jRect.width - edgeBuffer * 2 - padding * 2);
-    const usableHeight = Math.max(0, cRect.height - jRect.height - edgeBuffer * 2 - padding * 2);
+    const usableWidth = Math.max(
+      0,
+      cRect.width - jRect.width - edgeBuffer * 2 - padding * 2
+    );
+    const usableHeight = Math.max(
+      0,
+      cRect.height - jRect.height - edgeBuffer * 2 - padding * 2
+    );
 
-    // Random offset in [-usable/2, +usable/2]
-    const x = (Math.random() * usableWidth - usableWidth / 2);
-    const y = (Math.random() * usableHeight - usableHeight / 2);
+    const x = Math.random() * usableWidth - usableWidth / 2;
+    const y = Math.random() * usableHeight - usableHeight / 2;
 
     return { x: Math.round(x), y: Math.round(y) };
   };
@@ -42,6 +48,7 @@ export default function ContactMe() {
     setTimeout(() => (cooldownRef.current = false), 150);
   };
 
+  // start centered; recenter on resize
   useLayoutEffect(() => {
     const id = requestAnimationFrame(() => setPos({ x: 0, y: 0 }));
     const onResize = () => setPos({ x: 0, y: 0 });
@@ -58,34 +65,85 @@ export default function ContactMe() {
       className="relative w-full h-[100vh] overflow-hidden bg-transparent"
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-            <h2 className="text-36l font-semibold tracking-wide">
-                LET&apos;S&nbsp;
-            <WordCycler
+        <h2 className="text-36l font-semibold tracking-wide">
+          LET&apos;S&nbsp;
+          <WordCycler
             className="text-6xl font-bold text-primary"
             words={["WORK", "BUILD", "PLAY"]}
             interval={2000}
             duration={0.4}
             pauseOnHover
-            />
-                &nbsp;TOGETHER
-            </h2>
+          />
+          &nbsp;TOGETHER
+        </h2>
 
-        <Button size={"lg"}>Email me!</Button>
-        <Button size={"lg"}>Resume</Button>
+        <Button size="lg">Email me!</Button>
+        <Button size="lg">Resume</Button>
 
+        {/* Jumper wrapper: stays in the column, shrink-wraps to Button, and includes the counter/message below */}
         <motion.div
           ref={jumperRef}
-          className="w-fit mx-auto z-20"
+          className="w-fit mx-auto z-20 flex flex-col items-center gap-2"
           animate={{ x: pos.x, y: pos.y }}
-          transition={{ type: "spring", stiffness: 420, damping: 24 }}
+          transition={{ type: "spring", stiffness: 420, damping: 24 , delay:.025}}
           onHoverStart={handleHoverStart}
           whileHover={{ scale: 1.03 }}
         >
-          <Button size={"lg"} variant={"destructive"} onClick={()=>{console.log("Button hit")}}>
+          <Button
+            size="lg"
+            variant="destructive"
+            onClick={() => setHits((n) => n + 1)}
+          >
             I don&apos;t want to work with you!
           </Button>
+
+          {/* Counter text (hidden at 0). Once hits >= 5, swap to WaveText */}
+          {hits >= 5 ? (
+            <WaveText
+              text="D B G E D B G B G B"
+              className="text-xl font-semibold text-primary"
+              delay={0.08}
+              duration={1.2}
+            />
+          ) : (
+            hits > 0 && (
+              <p className="text-sm text-muted-foreground select-none">
+                You clicked me {hits} {hits === 1 ? "time" : "times"}!
+              </p>
+            )
+          )}
         </motion.div>
       </div>
     </section>
+  );
+}
+
+/* ===== Inline WaveText component (from your snippet) ===== */
+function WaveText({
+  text,
+  delay = 0.1,
+  duration = 1.5,
+  className = "text-foreground font-sans",
+  letterClassName = "",
+}) {
+  const groups = text.split(" ");
+  return (
+    <div className={`flex gap-2 ${className}`}>
+      {groups.map((group, i) => (
+        <motion.span
+          key={`${group}-${i}`}
+          animate={{ y: [0, -10, 0] }}
+          transition={{
+            repeat: Infinity,
+            duration,
+            ease: "easeInOut",
+            delay: i * delay,
+          }}
+          className={`inline-block ${letterClassName}`}
+        >
+          {group}
+        </motion.span>
+      ))}
+    </div>
   );
 }

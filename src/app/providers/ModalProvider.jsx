@@ -10,7 +10,13 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card,CardHeader,CardTitle,CardContent,CardFooter } from "../../components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 
 const ModalContext = createContext(null);
@@ -47,25 +53,44 @@ export function ModalProvider({ children }) {
       const hasVisited = localStorage.getItem("hasVisited");
       if (!hasVisited) {
         openModal(
-          <Card className={"w-full h-full"}>
-          <CardHeader>
-            <CardTitle><h1 className="text-2x1">Welcome!</h1></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-[14px]">
-            <p>If you're reading this, you've come across the portfolio website of Robert Lewis, 
-                If you'll indulge me, I would love to show you my works in a professional, but fun way.</p><br className="mb-16"/>
-                <p>You'll notice once this Modal is closed, you will only see a piano. Once you've played a certain 
-                song <span className="font-bold">(don't worry, I will give you the notes)</span> you will gain access to the rest of the site.</p><br className="mb-16"/>
-                <p>from there, you can look through my projects, learn about me, and contact me if that is all you want to do...
-                But I have hidden some more easter eggs around the site that revolve around this piano. Can you find them all?</p><br className="mb-16"/>
-                <p>Thank you again for visiting my site, and I hope to hear from you soon! Good luck!</p>
-            </div>
-          </CardContent>
-          <CardFooter className={"flex justify-end"}>
-            <Button onClick={closeModal}>Let's go!</Button>
-          </CardFooter>
-        </Card>
+          <Card className="w-[66%] shadow-none border-none">
+            <CardHeader>
+              <CardTitle>
+                <h1 className="text-2xl">Welcome!</h1>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-[14px]">
+                <p>
+                  If you're reading this, you've come across the portfolio
+                  website of Robert Lewis. If you'll indulge me, I would love to
+                  show you my works in a professional, but fun way.
+                </p>
+                <br className="mb-16" />
+                <p>
+                  You'll notice once this Modal is closed, you will only see a
+                  piano. Once you've played a certain song{" "}
+                  <span className="font-bold">(don't worry, I will give you the notes)</span>{" "}
+                  you will gain access to the rest of the site.
+                </p>
+                <br className="mb-16" />
+                <p>
+                  From there, you can look through my projects, learn about me,
+                  and contact me if that is all you want to do... But I have
+                  hidden some more easter eggs around the site that revolve
+                  around this piano. Can you find them all?
+                </p>
+                <br className="mb-16" />
+                <p>
+                  Thank you again for visiting my site, and I hope to hear from
+                  you soon! Good luck!
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button onClick={closeModal}>Let's go!</Button>
+            </CardFooter>
+          </Card>
         );
         localStorage.setItem("hasVisited", "true");
       }
@@ -88,21 +113,22 @@ export function ModalProvider({ children }) {
                 exit={{ opacity: 0 }}
                 onClick={closeModal}
               >
-                <motion.div
-                  key="panel"
-                  ref={panelRef}
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.95, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="bg-card text-card-foreground rounded-lg shadow-lg p-6 w-full
-                    max-w-[95vw] max-h-[95vh]
-                    md:max-w-[60vw] md:max-h-[90vh] 
-                    overflow-y-auto"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {content}
-                </motion.div>
+                {/* Full-screen centering container */}
+                <div className="w-full h-screen flex items-center justify-center pointer-events-none">
+                  {/* Animated content wrapper (you control width on the content you pass in) */}
+                  <motion.div
+                    key="panel"
+                    ref={panelRef}
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="pointer-events-auto bg-transparent p-0 flex justify-center items-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {content}
+                  </motion.div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>,

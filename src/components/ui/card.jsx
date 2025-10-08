@@ -7,7 +7,8 @@ function Card({ className, ...props }) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm transition-all duration-500",
+        // increased rounding from xl → 3xl
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-3xl border py-6 shadow-sm transition-all duration-500",
         // glow + hover scale effect
         "hover:shadow-[0_0_40px_6px_var(--primary)] hover:scale-[1.02]",
         className
