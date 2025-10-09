@@ -53,42 +53,42 @@ export function ModalProvider({ children }) {
       const hasVisited = localStorage.getItem("hasVisited");
       if (!hasVisited) {
         openModal(
-          <Card className="w-[66%] shadow-none border-none">
+          <Card className="w-[66%] h-max-[100vh] shadow-none border-none">
             <CardHeader>
               <CardTitle>
-                <h1 className="text-2xl">Welcome!</h1>
+                <h1 className="text-[14px]">Welcome!</h1>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-[14px]">
-                <p>
+              <div className="text-[12px]">
+                <p className="text-[12px]">
                   If you're reading this, you've come across the portfolio
                   website of Robert Lewis. If you'll indulge me, I would love to
                   show you my works in a professional, but fun way.
                 </p>
                 <br className="mb-16" />
-                <p>
+                <p className="text-[12px]">
                   You'll notice once this dialog is closed, you will only see a
                   piano. Once you've played a certain song{" "}
-                  <span className="font-bold">(don't worry, I will give you the notes)</span>{" "}
+                  <span className="text-[12px] font-bold">(don't worry, I will give you the notes)</span>{" "}
                   you will gain access to the rest of the site.
                 </p>
                 <br className="mb-16" />
-                <p>
+                <p className="text-[12px]">
                   From there, you can look through my projects, learn about me,
                   and contact me if that is all you want to do... But I have
                   hidden some more easter eggs around the site that revolve
                   around this piano. Can you find them all?
                 </p>
                 <br className="mb-16" />
-                <p>
+                <p className="text-[12px]">
                   Thank you again for visiting my site, and I hope to hear from
                   you soon! Good luck!
                 </p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button onClick={closeModal}>Let's go!</Button>
+              <Button size={"sm"} onClick={closeModal}>Let's go!</Button>
             </CardFooter>
           </Card>
         );
