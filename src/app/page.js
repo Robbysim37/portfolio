@@ -1,29 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 import { useSongsPlayed } from "./providers/SongsPlayedProvider";
+
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
 import PianoUI from "@/components/ui/piano";
 import Navbar from "@/components/Navbar";
+import StaticNavbar from "@/components/StaticNavbar";
+
 import HomeSection from "./sections/homeSection";
+import StaticHomeSection from "./sections/homeSectionStatic";
 import WaveText from "@/components/WaveText";
 import SkillsCard from "@/components/SkillsCard";
 import ContactMe from "./sections/ContactMeSection";
+
 import ZeldaCard from "./PianoCards/Zelda";
 import WallaceCard from "./PianoCards/Wallace";
 import MarioCard from "./PianoCards/Mario";
 import ChocoboCard from "./PianoCards/Chocobo";
 import EntertainerCard from "./PianoCards/Entertainer";
 import LockedCard from "./PianoCards/LockedCard";
-import StaticNavbar from "@/components/StaticNavbar";
-import StaticHomeSection from "./sections/homeSectionStatic";
-
-// If you add truly static (no-anim) versions later, import and swap here:
-// import NavbarStatic from "@/components/NavbarStatic";
-// import HomeSectionStatic from "./sections/homeSectionStatic";
 
 export default function Home() {
   const { played } = useSongsPlayed();
+  const { resolvedTheme, setTheme } = useTheme();
 
   // ---- mount gate to avoid SSR/CSR flicker ----
   const [mounted, setMounted] = useState(false);
@@ -44,8 +47,9 @@ export default function Home() {
 
   // Convenience flags
   const isUnlocked = played.song1;
-  const unlockedFromStorage = isUnlocked && unlockedOnMountRef.current && !didUnlockThisSession; // show static variants
-  const unlockedJustNow = isUnlocked && didUnlockThisSession; // play enter animations
+  const unlockedFromStorage =
+    isUnlocked && unlockedOnMountRef.current && !didUnlockThisSession;
+  const unlockedJustNow = isUnlocked && didUnlockThisSession;
 
   const song2Played = played.song2;
   const song3Played = played.song3;
@@ -67,10 +71,29 @@ export default function Home() {
     }
   }, []);
 
+  // ---- Theme toggle via avatar (top-right) ----
+  const isDark = resolvedTheme === "dark";
+  const nextTheme = isDark ? "light" : "dark";
+  const handleToggleTheme = () => setTheme(nextTheme);
+
+  // ✅ early return AFTER all hooks
   if (!mounted) return null;
 
   return (
     <>
+      {/* Floating Avatar Theme Toggle */}
+      <button
+        type="button"
+        aria-label={`Switch to ${nextTheme} mode`}
+        onClick={handleToggleTheme}
+        className="fixed right-4 top-4 z-50 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Avatar className="h-10 w-10">
+          <AvatarImage src="/avatar.png" alt="Avatar" />
+          <AvatarFallback>RL</AvatarFallback>
+        </Avatar>
+      </button>
+
       <div className="flex-col justify-center">
         {/* HEADER AREA (render only when unlocked) */}
         {isUnlocked && (
@@ -78,10 +101,11 @@ export default function Home() {
             {unlockedFromStorage ? <StaticNavbar /> : <Navbar />}
 
             <section id="home">
-              {unlockedFromStorage
-                ? <StaticHomeSection />
-                : <HomeSection expanded={isUnlocked} />
-              }
+              {unlockedFromStorage ? (
+                <StaticHomeSection />
+              ) : (
+                <HomeSection expanded={isUnlocked} />
+              )}
             </section>
           </div>
         )}
@@ -91,12 +115,11 @@ export default function Home() {
           id="piano"
           className="w-full h-fit flex flex-col justify-center items-center mt-32"
         >
-          <Card className={"h-fit w-fit"}>
-            <CardContent className={"w-fit h-fit"}>
+          <Card className="h-fit w-fit">
+            <CardContent className="w-fit h-fit">
               <p className="flex [@media(min-width:700px)]:hidden">
                 This is where the piano would go
               </p>
-
               <div className="hidden [@media(min-width:700px)]:block">
                 <PianoUI />
               </div>
@@ -110,33 +133,32 @@ export default function Home() {
           {/* CARDS GRID */}
           {isUnlocked && (
             <div className="mx-auto w-full mt-16 max-w-6xl flex flex-row flex-wrap items-stretch content-start justify-center gap-6">
-              {/* If your cards have animations, you can pass animateIn={unlockedJustNow} */}
               {isUnlocked ? (
-                <ZeldaCard /* animateIn={unlockedJustNow} */ />
+                <ZeldaCard />
               ) : (
                 <LockedCard />
               )}
 
               {song2Played ? (
-                <WallaceCard /* animateIn={unlockedJustNow} */ />
+                <WallaceCard />
               ) : (
                 <LockedCard clue={'My "Lightbulb" moment!'} />
               )}
 
               {song3Played ? (
-                <MarioCard /* animateIn={unlockedJustNow} */ />
+                <MarioCard />
               ) : (
                 <LockedCard clue={"Something you should know about me, I like games!"} />
               )}
 
               {song4Played ? (
-                <ChocoboCard /* animateIn={unlockedJustNow} */ />
+                <ChocoboCard />
               ) : (
                 <LockedCard clue={"Try very hard to be mean :("} />
               )}
 
               {song5Played ? (
-                <EntertainerCard /* animateIn={unlockedJustNow} */ />
+                <EntertainerCard />
               ) : (
                 <LockedCard clue={"this website is one of my projects!"} />
               )}
