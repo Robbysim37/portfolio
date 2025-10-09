@@ -81,19 +81,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Floating Avatar Theme Toggle */}
-      <button
-        type="button"
-        aria-label={`Switch to ${nextTheme} mode`}
-        onClick={handleToggleTheme}
-        className="fixed right-4 top-4 z-50 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Avatar className="h-10 w-10">
-          <AvatarImage src="/avatar.png" alt="Avatar" />
-          <AvatarFallback>RL</AvatarFallback>
-        </Avatar>
-      </button>
-
       <div className="flex-col justify-center">
         {/* HEADER AREA (render only when unlocked) */}
         {isUnlocked && (
