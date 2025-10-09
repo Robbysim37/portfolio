@@ -85,7 +85,7 @@ export default function ContactMe() {
           ref={jumperRef}
           className="w-fit mx-auto z-20 flex flex-col items-center gap-2"
           animate={{ x: pos.x, y: pos.y }}
-          transition={{ type: "spring", stiffness: 420, damping: 24 , delay:.025}}
+          transition={{ type: "spring", stiffness: 420, damping: 24 , delay:.035}}
           onHoverStart={handleHoverStart}
           whileHover={{ scale: 1.03 }}
         >
@@ -108,7 +108,7 @@ export default function ContactMe() {
           ) : (
             hits > 0 && (
               <p className="text-sm text-muted-foreground select-none">
-                You clicked me {hits} {hits === 1 ? "time" : "times"}!
+                You clicked me {hits}/5 times!
               </p>
             )
           )}

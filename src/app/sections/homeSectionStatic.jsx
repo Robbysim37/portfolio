@@ -7,19 +7,16 @@ import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import WaveText from "@/components/WaveText";
 
-export default function HomeSection({ expanded = false }) {
+export default function StaticHomeSection() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-
-  const drawnOutEase = [0.11, 0.9, 0.25, 1];
 
   // Flip controls/state
   const controls = useAnimationControls();
   const swappedRef = useRef(false);
 
-  // ✅ On mount (or theme restore), show the correct face:
-  // Light → 0°, Dark → 180°
+  // On mount (or theme restore), set correct face without enter transitions
   useEffect(() => {
     if (!mounted) return;
     controls.set({ rotateY: theme === "dark" ? 180 : 0 });
@@ -27,7 +24,7 @@ export default function HomeSection({ expanded = false }) {
 
   async function handleFlip() {
     swappedRef.current = false;
-    const target = theme === "light" ? 180 : 0; // flip to the opposite face
+    const target = theme === "light" ? 180 : 0; // flip to opposite face
     await controls.start({
       rotateY: target,
       transition: { duration: 0.6, ease: "easeInOut" },
@@ -35,21 +32,13 @@ export default function HomeSection({ expanded = false }) {
   }
 
   return (
-    <motion.div
-      initial={{ height: "0vh" }}
-      animate={{ height: expanded ? "100vh" : "0vh" }}
-      transition={{ duration: 15, ease: drawnOutEase }}
-      className="w-full overflow-hidden flex items-center justify-center px-6 py-20 text-center bg-[var(--background)]"
-    >
-      <motion.div
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: expanded ? 1 : 0 }}
-        transition={{ duration: 15, ease: drawnOutEase }}
-        className="origin-top transform-gpu will-change-transform flex flex-col items-center justify-center gap-10 w-full"
-      >
+    // 🔒 Removed the height/expand animation — this wrapper is now static
+    <div className="w-full min-h-[100vh] flex items-center justify-center px-6 py-20 text-center bg-[var(--background)]">
+      {/* 🔒 Removed the inner scaleY enter animation — static content container */}
+      <div className="flex flex-col items-center justify-center gap-10 w-full">
         {/* Avatar wrapper (click to flip) */}
         <motion.div
-          whileHover={{ scale: 1.2, boxShadow: "0 0 40px 10px var(--primary)" }}
+          whileHover={{ scale: 1.2, boxShadow: "0 0 40px 10px var(--primary)" }} // ✅ keep glow
           transition={{ type: "spring", stiffness: 250, damping: 18 }}
           onClick={handleFlip}
           className="relative isolate h-[280px] w-[280px] cursor-pointer rounded-full p-[4px]
@@ -62,11 +51,10 @@ export default function HomeSection({ expanded = false }) {
           <motion.div
             className="relative h-full w-full rounded-full"
             style={{ transformStyle: "preserve-3d" }}
-            animate={controls}
+            animate={controls} // ✅ keep flip animation
             initial={{ rotateY: 0 }}
             onUpdate={(latest) => {
               const y = ((latest?.rotateY ?? 0) % 360 + 360) % 360;
-              // swap theme exactly as we cross the midpoint of the flip
               if (!swappedRef.current && y >= 90 && y < 270) {
                 setTheme(theme === "dark" ? "light" : "dark");
                 swappedRef.current = true;
@@ -126,12 +114,12 @@ export default function HomeSection({ expanded = false }) {
           </AnimatePresence>
         </motion.div>
 
-        {/* Headline */}
+        {/* Headline (static) */}
         <div>
           <h1 className="text-8xl font-bold text-[var(--foreground)]">Robert Lewis</h1>
           <p className="mt-6 text-5xl text-[var(--accent-foreground)]/80">Professionally fun.</p>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

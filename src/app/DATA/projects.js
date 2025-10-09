@@ -1,5 +1,15 @@
 const projectsArr = [
   {
+    title: "Augment Shell",
+    imgURL: "/projectImages/augmentShell.svg",
+    projectLink: "https://www.augmentshell.dev/",
+    description: `I was contracted to write up this website for a client to advertise his upcoming project called 
+        "Augment Shell". It's currently in development, but when complete the goal is to have an AI that helps you 
+        navigate error's when usng the CLI for linux systems. It's meant to be able to draw up a diagnostics plan and 
+        implement that plan to fix any errors. That project is not complete yet, but this is the landing page with a 
+        waitlist.`
+  },
+  {
     title: "Box Defender Excel",
     imgURL: "/projectImages/boxDefender.png",
     projectLink: "BoxDefender",
@@ -44,6 +54,12 @@ const projectsArr = [
         to a YouTube demonstration on how the frontend works, and how I incorperated Excel into its 
         functionality `,
   },
+  {
+    title: "Robert Lewis Portfolio Site",
+    imgURL: "/projectImages/inception.png",
+    projectLink: "NEEDS TO BE FIXED",
+    description: "Woah, it's like Inception... The Tech stack included Next.JS, Framer-Motion, Tailwind, and shadCN",
+  }
 ];
 
 export default projectsArr;
