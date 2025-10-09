@@ -5,7 +5,6 @@ import { useTheme } from "next-themes";
 import { useSongsPlayed } from "./providers/SongsPlayedProvider";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 import PianoUI from "@/components/ui/piano";
 import Navbar from "@/components/Navbar";
@@ -23,6 +22,7 @@ import MarioCard from "./PianoCards/Mario";
 import ChocoboCard from "./PianoCards/Chocobo";
 import EntertainerCard from "./PianoCards/Entertainer";
 import LockedCard from "./PianoCards/LockedCard";
+import { FcRotateToLandscape } from "react-icons/fc";
 
 export default function Home() {
   const { played } = useSongsPlayed();
@@ -105,8 +105,9 @@ export default function Home() {
           <Card className="h-fit w-fit">
             <CardContent className="w-fit h-fit">
               <p className="flex [@media(min-width:700px)]:hidden">
-                This is where the piano would go
+                Rotate your device to landscape mode!
               </p>
+              <FcRotateToLandscape size={48} className="text-center w-full [@media(min-width:700px)]:hidden"/>
               <div className="hidden [@media(min-width:700px)]:block">
                 <PianoUI />
               </div>
@@ -119,7 +120,7 @@ export default function Home() {
 
           {/* CARDS GRID */}
           {isUnlocked && (
-            <div className="mx-auto w-full mt-16 max-w-6xl flex flex-row flex-wrap items-stretch content-start justify-center gap-6">
+            <div className="mx-auto w-full mt-16 md:max-w-6xl flex flex-row flex-wrap items-stretch content-start justify-center gap-6">
               {isUnlocked ? (
                 <ZeldaCard />
               ) : (

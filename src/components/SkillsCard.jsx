@@ -13,7 +13,7 @@ export default function SkillsCard({
   return (
     <div
       className="
-        relative mx-auto w-full max-w-sm
+        relative mx-auto w-[90%] md:w-full max-w-sm
         rounded-3xl border border-[var(--border)]/40
         bg-[var(--card)] text-[var(--card-foreground)]
         p-6 sm:p-7

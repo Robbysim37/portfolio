@@ -128,8 +128,8 @@ export default function HomeSection({ expanded = false }) {
 
         {/* Headline */}
         <div>
-          <h1 className="text-8xl font-bold text-[var(--foreground)]">Robert Lewis</h1>
-          <p className="mt-6 text-5xl text-[var(--accent-foreground)]/80">Professionally fun.</p>
+          <h1 className="text-5xl md:text-8xl font-bold text-[var(--foreground)]">Robert Lewis</h1>
+          <p className="mt-6 text-3xl md:text-5xl text-[var(--accent-foreground)]/80">Professionally fun.</p>
         </div>
       </motion.div>
     </motion.div>

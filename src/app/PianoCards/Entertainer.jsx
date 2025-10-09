@@ -2,7 +2,7 @@ import { Card,CardTitle,CardContent } from "@/components/ui/card"
 
 export default function EntertainerCard() {
     return(
-        <Card className={"w-[45%] cursor-default"}>
+        <Card className={"w-[90%] md:w-[45%] cursor-default"}>
             <CardTitle>
             <p className="text-4xl text-center">🎹</p><h2 className="text-center">An oldie, but a goodie!</h2>
             </CardTitle>

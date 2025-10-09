@@ -57,7 +57,7 @@ const projectsArr = [
   {
     title: "Robert Lewis Portfolio Site",
     imgURL: "/projectImages/inception.png",
-    projectLink: "NEEDS TO BE FIXED",
+    projectLink: "/",
     description: "Woah, it's like Inception... The Tech stack included Next.JS, Framer-Motion, Tailwind, and shadCN",
   }
 ];

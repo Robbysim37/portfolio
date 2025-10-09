@@ -5,7 +5,20 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import WordCycler from "@/components/WordCycler";
 
+export const openEmail = () => {
+    window.open("https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=Robbysim37@gmail.com")
+}
+
+export const downloadResume = () => {
+    let link = document.createElement("a");
+    link.download = "Robert Lewis Resume";
+    link.href = "/RobertLewisResume.pdf";
+    link.click();
+    link.remove();
+}
+
 export default function ContactMe() {
+  
   const sectionRef = useRef(null);
   const jumperRef = useRef(null);
   const cooldownRef = useRef(false);
@@ -65,10 +78,10 @@ export default function ContactMe() {
       className="relative w-full h-[100vh] overflow-hidden bg-transparent"
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-        <h2 className="text-36l font-semibold tracking-wide">
+        <h2 className="text-3xl md:text-6xl font-semibold tracking-wide">
           LET&apos;S&nbsp;
           <WordCycler
-            className="text-6xl font-bold text-primary"
+            className="text-3xl md:text-6xl font-bold text-primary"
             words={["WORK", "BUILD", "PLAY"]}
             interval={2000}
             duration={0.4}
@@ -77,8 +90,8 @@ export default function ContactMe() {
           &nbsp;TOGETHER
         </h2>
 
-        <Button size="lg">Email me!</Button>
-        <Button size="lg">Resume</Button>
+        <Button onClick={openEmail} size="lg">Email me!</Button>
+        <Button onClick={downloadResume}size="lg">Resume</Button>
 
         {/* Jumper wrapper: stays in the column, shrink-wraps to Button, and includes the counter/message below */}
         <motion.div

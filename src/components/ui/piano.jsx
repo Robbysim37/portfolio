@@ -12,11 +12,11 @@ import { useSongsPlayed } from "../../app/providers/SongsPlayedProvider";
    Exact-note Unlock Sequences
    ================================ */
 const SEQUENCES = [
-  { key: "song1", seq: ["G4", "A4", "B4", "Db5"] }, 
+  { key: "song1", seq: ["G4", "A4", "B4", "Db5"] },
   { key: "song2", seq: ["C5","A#4","A4","C5","A#4","A4","C5","G4"] },
   { key: "song3", seq: ["E5","E5","E5","C5","E5","G5","G4"] },
   { key: "song4", seq: ["D5","B4","G4","E4","D5","B4","G4","B4","G4","B4"] },
-  { key: "song5", seq: ["D4","D#4","E4","C5","E4","C5","E4","C5",] },
+  { key: "song5", seq: ["D4","D#4","E4","C5","E4","C5","E4","C5"] },
 ];
 
 const normalizePitch = (pc) => {
@@ -94,15 +94,35 @@ export default function PianoUI() {
     setActiveNotes(Array.from(s));
   };
 
+  // === Viewport width (for responsive sizing 500–650px => small) ===
+  const [vw, setVw] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   // === Sizing: width from white-key count (expand, scroll if needed) ===
-  const WHITE_KEY_PX = 28; // adjust if you want larger/smaller keys
+  const WHITE_KEY_PX_DEFAULT = 28;
+  const WHITE_KEY_PX_SMALL = 20; // smaller keys in 500–650px range
+  const MIN_W_DEFAULT = 850;
+  const MIN_W_SMALL = 520;
+
+  const isSmallBand = vw >= 700 && vw <= 850;
+
   const whiteCount = useMemo(
     () => countWhiteKeys(firstNote, lastNote),
     [firstNote, lastNote]
   );
+
+  const perKeyPx = isSmallBand ? WHITE_KEY_PX_SMALL : WHITE_KEY_PX_DEFAULT;
+  const minWidth = isSmallBand ? MIN_W_SMALL : MIN_W_DEFAULT;
+
   const pianoWidth = useMemo(
-    () => Math.max(whiteCount * WHITE_KEY_PX, 850), // min width guard
-    [whiteCount]
+    () => Math.max(whiteCount * perKeyPx, minWidth),
+    [whiteCount, perKeyPx, minWidth]
   );
 
   /* ========= Audio init ========= */

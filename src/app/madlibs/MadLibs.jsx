@@ -18,18 +18,15 @@ import {
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useModal } from "../providers/ModalProvider";
-// ⬇️ Update this path to your file location
 import WaveText from "@/components/WaveText";
 
 /* =====================================================
-   Mad Libs Drag & Drop (uses ModalProvider)
-   - Real-card drag (no ghost), portaled to <body>
-   - Centered on cursor pre-start, onDragStart, and each onDrag
-   - No springs; instant snap on drop; click chip to remove
-   - Category matching, replace on occupied
-   - Palette: shadcn Accordion + Tabs
-   - Soft hover shadow on Card (overrides global glow)
-   - Modal content: shows WaveText ONLY for games-2
+   Mad Libs Drag & Drop (mobile: drag directly from accordion)
+   - Drag start is triggered in TileCard AFTER the drag frame mounts
+   - Real-card drag (no ghost), cursor-centered each frame
+   - Accordion opens on hover & click, stays open while dragging
+   - Soft hover override for Card
+   - Modal via ModalProvider; WaveText only for games-2
    ===================================================== */
 
 const PARAGRAPH = `Hi there! My name is Robert Lewis. I'm a {{Identity}} who loves {{Hobbies}}. I'm a bit of a workaholic, as software development has taken up much of my free time. I have experience as {{JobExperience}} and always put in maximum effort to succeed in any position I'm in. When I'm not working, I enjoy watching movies—one of my favorites being {{Movies}}. When I have extra time on my hands, I like to play {{Games}}; something about learning a system and using it efficiently to "win" is very satisfying. At the end of the day, I'm a hardworking man who’s eager to start his career as a developer, and there’s no substitute for that. I hope you'll consider me for your next open position.`;
@@ -49,7 +46,7 @@ const CONFIG = {
       { id: "identity-3", title: "A Thespian", text: "Before I graduated high school, I would have told you my dream job was to be an actor. Over time, I drifted away from that idea and began to pursue careers closer to my love for science and logic. But I still like to imagine there’s a universe where I play a supervillain—mostly because of the goatee.", image: null, category: "Identity" },
     ],
     Hobbies: [
-      { id: "hobbies-1", title: "My Cats", text: "Rock & Roll—not just a music genre or the Japanese names for Mega Man (Rockman) and his sister Roll—they’re also my cats! Truly the best cats on the planet, even if I sometimes come home to chewed-up cords. It’s worth it to watch Roll stare at me with her big ol’ bug eyes.", image: null, category: "Hobbies" },
+      { id: "hobbies-1", title: "My Cats", text: "Rock & Roll—not just a music genre or the Japanese names for Mega Man (Rockman) and his sister Roll)—they’re also my cats! Truly the best cats on the planet, even if I sometimes come home to chewed-up cords. It’s worth it to watch Roll stare at me with her big ol’ bug eyes.", image: null, category: "Hobbies" },
       { id: "hobbies-2", title: "My Family", text: "Some people have a family tree; I have a family orchard. My great-grandmother had ten children on my dad’s side, and my mom’s side has a yearly reunion. I’m pretty lucky to have a crew of people to love and rely on, and I never run out of fun stories to tell about them!", image: null, category: "Hobbies" },
       { id: "hobbies-3", title: "Music", text: "Unfortunately, the only keyboard I play makes code, not music. But one day, I’d love to pick up the piano—I’ve got quite a few songs I want to be able to bust out at parties. Without music, I don’t know how I’d sit down and code, take long road trips, or truly relax. My favorite way to start the day is with bacon, eggs, and Frank Sinatra.", image: null, category: "Hobbies" },
       { id: "hobbies-4", title: "Games", text: "Later in this minigame, there’ll be more details—but I love systems, strategy, competition, bragging rights, and learning from failure. All of that is wrapped neatly in what we know as games. I always play my hardest out of respect for my opponents—but I also make sure to have fun. Because without the fun, there’s not much point.", image: null, category: "Hobbies" },
@@ -74,8 +71,7 @@ const CONFIG = {
         text: "I love the old school. There’s something magical about how the limits of early technology forced developers to innovate in music, design, art, and gameplay. I’m a firm believer that limitations shape real art—and the early days of gaming were truly the golden years.",
         image: null,
         category: "Games",
-        // 👇 Only this tile gets WaveText in the modal:
-        waveText: "E E E C E G lowG",
+        waveText: "G A B C#",
       },
       { id: "games-3", title: "Board Games", text: "I’m a fan of all sorts of board games, and I make a habit of getting together with family often to play. I’m always down for simple games like Monopoly or Sorry, as well as deeper ones like Diplomacy or The Campaign for North Africa.", image: null, category: "Games" },
       { id: "games-4", title: "Card Games", text: "Rounders is one of my favorite movies, so you can guess I like poker. As a Midwesterner, I’m also legally obligated to enjoy Euchre. Of course, I love trading card games like Magic: The Gathering and Hearthstone. But not Yu-Gi-Oh! Never Yu-Gi-Oh…", image: null, category: "Games" },
@@ -154,9 +150,19 @@ function Chip({ tile, onClick }) {
 }
 
 // ---------- palette card (actual draggable) ----------
-function TileCard({ tile, hidden, onPointerDown, isDragging, dragX, dragY, dragControls, onDragEnd }) {
+function TileCard({
+  tile,
+  hidden,
+  onPointerDownBegin, // renamed to clarify init only (no dragControls here)
+  isDragging,
+  dragX,
+  dragY,
+  dragControls,
+  onDragEnd,
+}) {
   const ref = useRef(null);
   const sizeRef = useRef({ width: 0, height: 0 });
+  const startEvtRef = useRef(null); // 👈 cache the pointer event for starting drag after mount
 
   useEffect(() => {
     if (ref.current) {
@@ -165,25 +171,45 @@ function TileCard({ tile, hidden, onPointerDown, isDragging, dragX, dragY, dragC
     }
   }, [isDragging]);
 
+  // Start the drag AFTER the portaled drag frame is mounted
+  useEffect(() => {
+    if (!isDragging || !startEvtRef.current) return;
+    // next frame to ensure the motion.div exists in the DOM
+    const id = requestAnimationFrame(() => {
+      try {
+        // Use the native event if available (React events are fine in 18+, but this is safer)
+        const evt = startEvtRef.current.nativeEvent ?? startEvtRef.current;
+        dragControls.start(evt);
+      } catch {}
+    });
+    return () => cancelAnimationFrame(id);
+  }, [isDragging, dragControls]);
+
   if (hidden && !isDragging) return null;
 
-  // soft hover override (replaces global glow from Card)
-  const SOFT_HOVER = "hover:shadow-[0_8px_24px_-12px_rgb(0_0_0_/_0.25)] hover:scale-[1.005] transition-shadow duration-200";
+  const SOFT_HOVER =
+    "hover:shadow-[0_8px_24px_-12px_rgb(0_0_0_/_0.25)] hover:scale-[1.005] transition-shadow duration-200";
 
   const cardInner = (
     <Card
       ref={ref}
       data-tile-id={tile.id}
       className={[
-        "relative select-none",
+        "relative select-none touch-none", // allow immediate drag on touch
         "px-3 py-2 text-sm rounded-md border border-border bg-card hover:bg-accent/10",
         isDragging ? "cursor-grabbing" : "cursor-grab active:cursor-grabbing",
         SOFT_HOVER,
       ].join(" ")}
+      onPointerDownCapture={(e) => {
+        if (e.pointerId != null) {
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+        }
+      }}
       onPointerDown={(e) => {
+        startEvtRef.current = e;      // cache event for use after mount
         e.preventDefault();
         e.stopPropagation();
-        onPointerDown(e);
+        onPointerDownBegin(e, tile);  // parent sets drag state & initial x/y
       }}
     >
       {tile.title}
@@ -223,7 +249,7 @@ function TileCard({ tile, hidden, onPointerDown, isDragging, dragX, dragY, dragC
 
     return (
       <>
-        {/* placeholder to hold grid space */}
+        {/* placeholder to keep grid layout stable */}
         <div style={{ width: sizeRef.current.width, height: sizeRef.current.height }} />
         {createPortal(DragFrame, document.body)}
       </>
@@ -233,12 +259,12 @@ function TileCard({ tile, hidden, onPointerDown, isDragging, dragX, dragY, dragC
   return cardInner;
 }
 
-// ---------- bottom palette ----------
+// ---------- bottom palette (hover + click open; stays open while dragging) ----------
 function PaletteAccordion({
   tabs,
   tilesByTab,
   assignments,
-  onTilePointerDown,
+  onTilePointerDownBegin,
   draggingTileId,
   dragX,
   dragY,
@@ -246,17 +272,59 @@ function PaletteAccordion({
   onDragEnd,
   peekHeight = 44,
 }) {
-  const [open, setOpen] = useState(false);
+  // Controlled value for Radix accordion
+  const [value, setValue] = useState/** @type {string | undefined} */(undefined);
   const [activeTab, setActiveTab] = useState(tabs[0]?.id ?? "");
+
+  const supportsHover =
+    typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches;
+
+  // Keep open while dragging
+  useEffect(() => {
+    if (draggingTileId) setValue("palette");
+  }, [draggingTileId]);
+
+  // Hover intent timers
+  const openTimer = useRef(null);
+  const closeTimer = useRef(null);
+  const clearTimers = () => {
+    if (openTimer.current) { clearTimeout(openTimer.current); openTimer.current = null; }
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+  };
+
+  const onEnter = () => {
+    if (!supportsHover) return;
+    clearTimers();
+    openTimer.current = setTimeout(() => setValue("palette"), 80);
+  };
+  const onLeave = () => {
+    if (!supportsHover) return;
+    clearTimers();
+    if (draggingTileId) return;
+    closeTimer.current = setTimeout(() => setValue(undefined), 220);
+  };
+
+  useEffect(() => () => clearTimers(), []);
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30">
+    <div
+      className="fixed inset-x-0 bottom-0 z-30"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+    >
       <div className="flex items-center justify-center border-t border-border bg-muted/60 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
-        <Accordion type="single" collapsible value={open ? "palette" : undefined} onValueChange={(v) => setOpen(!!v)}>
+        <Accordion
+          type="single"
+          collapsible
+          value={value}
+          onValueChange={setValue}
+        >
           <AccordionItem value="palette" className="border-none">
             <AccordionTrigger className="px-4 [&>svg]:hidden" style={{ height: peekHeight }}>
               <div className="mx-auto h-1.5 w-10 rounded-full bg-border" />
             </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 pt-2">
+            {/* Prevent native touch scrolling from hijacking the first drag */}
+            <AccordionContent className="px-4 pb-4 pt-2 touch-none">
               <div className="mx-auto max-w-5xl">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="w-full overflow-x-auto justify-start">
@@ -268,7 +336,10 @@ function PaletteAccordion({
                   </TabsList>
                   {tabs.map((t) => (
                     <TabsContent key={t.id} value={t.id} className="mt-3">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[35vh] overflow-y-auto pr-1">
+                      <div
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2
+                                   max-h-[35vh] overflow-y-auto pr-1 touch-none"
+                      >
                         {tilesByTab[t.id]?.map((tile) => {
                           const isPlaced = Object.values(assignments).includes(tile.id);
                           const isDraggingThis = draggingTileId === tile.id;
@@ -282,7 +353,9 @@ function PaletteAccordion({
                               dragY={dragY}
                               dragControls={dragControls}
                               onDragEnd={onDragEnd}
-                              onPointerDown={(e) => onTilePointerDown(e, tile, { source: "palette", tabId: t.id })}
+                              onPointerDownBegin={(e, t) =>
+                                onTilePointerDownBegin(e, t, { source: "palette", tabId: t.category })
+                              }
                             />
                           );
                         })}
@@ -300,7 +373,7 @@ function PaletteAccordion({
 }
 
 export default function MadLibsComposer() {
-  const { openModal,closeModal } = useModal();
+  const { openModal, closeModal } = useModal();
 
   const segments = useMemo(() => parseParagraph(PARAGRAPH), []);
   const tilesById = useMemo(() => {
@@ -315,9 +388,17 @@ export default function MadLibsComposer() {
     for (const seg of segments) if (seg.type === "zone") a[seg.zoneId] = null;
     return a;
   }, [segments]);
+
   const [assignments, setAssignments] = useState(initialAssignments);
 
-  // zone refs
+  // Build a fast lookup: zoneId -> category
+  const zoneCategoryById = useMemo(() => {
+    const map = {};
+    for (const s of segments) if (s.type === "zone") map[s.zoneId] = s.category;
+    return map;
+  }, [segments]);
+
+  // zone refs for hit-testing
   const zoneRefs = useRef({});
   const setZoneRef = (zoneId, refObj) => {
     if (!refObj) delete zoneRefs.current[zoneId];
@@ -336,40 +417,37 @@ export default function MadLibsComposer() {
     homeRect: null,
   });
 
-  // start drag (pre-center to prevent top-left snap)
-  const beginDrag = (e, tile, { source, zoneId }) => {
+  // Begin drag: parent sets active + initial x/y; TileCard will actually start the drag
+  const beginDrag = (e, tile /*, meta */) => {
     e.preventDefault();
     e.stopPropagation();
 
     let homeRect = null;
     const el = e.currentTarget;
-    if (el && el.getBoundingClientRect) {
+    if (el?.getBoundingClientRect) {
       homeRect = el.getBoundingClientRect();
     }
 
-    if (source === "zone") {
-      setAssignments((prev) => ({ ...prev, [zoneId]: null }));
-    }
-
-    setDragState({ active: true, tileId: tile.id, source, sourceZoneId: zoneId ?? null, homeRect });
+    setDragState({
+      active: true,
+      tileId: tile.id,
+      source: "palette",
+      sourceZoneId: null,
+      homeRect,
+    });
 
     const { x: px0, y: py0 } = clientXY(e);
     const w0 = homeRect?.width ?? 0;
     const h0 = homeRect?.height ?? 0;
     dragX.set(Math.round(px0 - w0 / 2));
     dragY.set(Math.round(py0 - h0 / 2));
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        try { dragControls.start(e); } catch {}
-      });
-    });
   };
 
   const measureDraggedCard = () => {
     if (!dragState.tileId) return null;
     const el = document.querySelector('[data-tile-id="' + dragState.tileId + '"]');
     return el?.getBoundingClientRect() ?? dragState.homeRect ?? null;
+    // Note: during drag, the portaled card carries this data attribute.
   };
 
   const setToRectCenter = (rect) => {
@@ -395,7 +473,9 @@ export default function MadLibsComposer() {
     if (!tileId) return endDrag();
 
     const tile = tilesById[tileId];
-    const { x: px, y: py } = clientXY(e);
+    const p = e?.nativeEvent ?? e;
+    const px = p?.clientX ?? p?.changedTouches?.[0]?.clientX ?? 0;
+    const py = p?.clientY ?? p?.changedTouches?.[0]?.clientY ?? 0;
 
     // find matching-category zone under pointer
     const entries = Object.entries(zoneRefs.current);
@@ -405,8 +485,7 @@ export default function MadLibsComposer() {
       if (!el) continue;
       const r = el.getBoundingClientRect();
       const contains = px >= r.left && px <= r.right && py >= r.top && py <= r.bottom;
-      const seg = segments.find((s) => s.type === "zone" && s.zoneId === zoneId);
-      const ok = seg?.category === tile.category;
+      const ok = zoneCategoryById[zoneId] === tile.category;
       if (contains && ok) { hit = { zoneId, rect: r }; break; }
     }
 
@@ -428,23 +507,22 @@ export default function MadLibsComposer() {
     const zone2 = zoneRefs.current[hit.zoneId]?.current?.getBoundingClientRect();
     if (zone2) setToRectCenter(zone2);
 
-    // 🔔 Open modal via provider (full-screen centering handled by provider styles)
+    // Open modal via provider
     openModal(
-      <Card className="w-full max-w-2xl">
+      <Card className="w-[90%] md:w-full max-w-2xl">
         <CardHeader className="pb-2">
           <CardTitle>{tile.title}</CardTitle>
-          {/* Only games-2 renders WaveText */}
-          {"waveText" in tile && tile.waveText ? (
+          {tile.id === "games-2" && (
             <div className="mt-2">
               <WaveText
-                text={tile.waveText}
+                text={tile.waveText || "G A B C#"}
                 delay={0.12}
                 duration={1.2}
                 className="text-primary font-semibold"
                 letterClassName="tracking-wide"
               />
             </div>
-          ) : null}
+          )}
         </CardHeader>
         <CardContent className="text-sm text-foreground/80">
           {tile.image ? (
@@ -474,9 +552,8 @@ export default function MadLibsComposer() {
   };
 
   return (
-    <div className="relative mt-32">
+    <div className="relative mt-16">
       {/* Paragraph with inline zones */}
-      <h2 className="w-full text-center">The Robert Lewis Mad Libs!</h2> 
       <div className="mx-auto max-w-3xl px-4 py-8">
         <p className="leading-relaxed">
           {segments.map((seg, i) => {
@@ -507,7 +584,7 @@ export default function MadLibsComposer() {
         dragY={dragY}
         dragControls={dragControls}
         onDragEnd={handleDragEnd}
-        onTilePointerDown={(e, tile) => beginDrag(e, tile, { source: "palette" })}
+        onTilePointerDownBegin={beginDrag}
       />
     </div>
   );

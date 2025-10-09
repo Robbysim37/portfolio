@@ -68,7 +68,7 @@ export function ModalProvider({ children }) {
                 </p>
                 <br className="mb-16" />
                 <p>
-                  You'll notice once this Modal is closed, you will only see a
+                  You'll notice once this dialog is closed, you will only see a
                   piano. Once you've played a certain song{" "}
                   <span className="font-bold">(don't worry, I will give you the notes)</span>{" "}
                   you will gain access to the rest of the site.

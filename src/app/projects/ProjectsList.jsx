@@ -51,9 +51,9 @@ export default function ProjectsList() {
   }, []);
 
   return (
-    <section id="projects" className="w-full mt-32 py-12">
+    <section id="projects" className="w-full py-12">
       <div className="mx-auto w-[90%] max-w-7xl flex flex-col items-center">
-        <h2 className="w-full text-3xl font-bold tracking-tight mb-6 text-center">
+        <h2 className="w-full text-6xl font-bold tracking-tight mb-6 text-center md:text-left">
           Projects
         </h2>
 
