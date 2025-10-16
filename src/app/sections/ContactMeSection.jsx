@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, useEffect } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import WaveText from "@/components/WaveText";
@@ -11,7 +11,6 @@ export const openEmail = () => {
 };
 
 export const downloadResume = () => {
-  // Put RobertLewisResume.pdf in /public
   const link = document.createElement("a");
   link.download = "Robert Lewis Resume";
   link.href = "/RobertLewisResume.pdf";
@@ -28,24 +27,6 @@ export default function ContactMe() {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [hits, setHits] = useState(0);
 
-  // ---- detect "mobile view" (small screen + no hover capability) ----
-  const [isMobileView, setIsMobileView] = useState(false);
-  useEffect(() => {
-    const mqHoverNone = window.matchMedia("(hover: none)");
-    const mqMaxWidth = window.matchMedia("(max-width: 768px)");
-
-    const update = () => setIsMobileView(mqHoverNone.matches && mqMaxWidth.matches);
-    update();
-
-    mqHoverNone.addEventListener?.("change", update);
-    mqMaxWidth.addEventListener?.("change", update);
-    return () => {
-      mqHoverNone.removeEventListener?.("change", update);
-      mqMaxWidth.removeEventListener?.("change", update);
-    };
-  }, []);
-
-  // Compute random offsets, but restrict by 75 px padding per side
   const pickRandomOffsets = () => {
     const container = sectionRef.current;
     const jumper = jumperRef.current;
@@ -74,17 +55,11 @@ export default function ContactMe() {
     setTimeout(() => (cooldownRef.current = false), 150);
   };
 
-  // NEW: on mobile view, clicking the red button also triggers the jump
-  const handleDenyClick = () => {
-    if (isMobileView) handleHoverStart(); // jump on tap (mobile only)
-    setHits((n) => n + 1);
-  };
-
-  // start centered; recenter on resize
+  // Start centered; recenter on resize
   useLayoutEffect(() => {
     const id = requestAnimationFrame(() => setPos({ x: 0, y: 0 }));
     const onResize = () => setPos({ x: 0, y: 0 });
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", onResize, { passive: true });
     return () => {
       cancelAnimationFrame(id);
       window.removeEventListener("resize", onResize);
@@ -95,6 +70,7 @@ export default function ContactMe() {
     <section
       ref={sectionRef}
       className="relative w-full h-[100vh] overflow-hidden bg-transparent"
+      style={{ touchAction: "manipulation" }} // ⬅️ helps mobile taps feel snappier
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
         <h2 className="text-3xl md:text-6xl font-semibold tracking-wide">
@@ -112,24 +88,27 @@ export default function ContactMe() {
         <Button onClick={openEmail} size="lg">Email me!</Button>
         <Button onClick={downloadResume} size="lg">Resume</Button>
 
-        {/* Jumper wrapper */}
         <motion.div
           ref={jumperRef}
-          className="w-fit mx-auto z-20 flex flex-col items-center gap-2"
+          className="w-fit mx-auto z-20 flex flex-col items-center gap-2 select-none"
           animate={{ x: pos.x, y: pos.y }}
           transition={{ type: "spring", stiffness: 420, damping: 24, delay: 0.075 }}
-          onHoverStart={handleHoverStart}            // desktop "hover to jump"
+          onHoverStart={handleHoverStart}           // desktop hover → jump
+          onTapStart={handleHoverStart}             // touch tap start → jump (iOS/Android)
+          onPointerDown={(e) => {
+            // Fallback for odd browsers: if it's a touch, jump
+            if (e.pointerType === "touch") handleHoverStart();
+          }}
           whileHover={{ scale: 1.03 }}
         >
           <Button
             size="lg"
             variant="destructive"
-            onClick={handleDenyClick}                // mobile "tap to jump"
+            onClick={() => setHits((n) => n + 1)}    // still counts taps/clicks
           >
             I don&apos;t want to work with you!
           </Button>
 
-          {/* Counter text (hidden at 0). Once hits >= 5, swap to WaveText */}
           {hits >= 5 ? (
             <WaveText
               text="D B G E D B G B G B"
