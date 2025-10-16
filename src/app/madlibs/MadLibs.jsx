@@ -71,7 +71,7 @@ const CONFIG = {
         text: "I love the old school. There’s something magical about how the limits of early technology forced developers to innovate in music, design, art, and gameplay. I’m a firm believer that limitations shape real art—and the early days of gaming were truly the golden years.",
         image: null,
         category: "Games",
-        waveText: "G A B C#",
+        waveText: "E E E C E G lowG",
       },
       { id: "games-3", title: "Board Games", text: "I’m a fan of all sorts of board games, and I make a habit of getting together with family often to play. I’m always down for simple games like Monopoly or Sorry, as well as deeper ones like Diplomacy or The Campaign for North Africa.", image: null, category: "Games" },
       { id: "games-4", title: "Card Games", text: "Rounders is one of my favorite movies, so you can guess I like poker. As a Midwesterner, I’m also legally obligated to enjoy Euchre. Of course, I love trading card games like Magic: The Gathering and Hearthstone. But not Yu-Gi-Oh! Never Yu-Gi-Oh…", image: null, category: "Games" },
@@ -515,11 +515,12 @@ export default function MadLibsComposer() {
           {tile.id === "games-2" && (
             <div className="mt-2">
               <WaveText
-                text={tile.waveText || "G A B C#"}
+                text={tile.waveText || "E E E C E G lowG"}
                 delay={0.12}
                 duration={1.2}
                 className="text-primary font-semibold"
                 letterClassName="tracking-wide"
+                flagKey={"song3Wave"}
               />
             </div>
           )}

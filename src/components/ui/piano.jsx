@@ -73,10 +73,11 @@ export default function PianoUI() {
   const [loaded, setLoaded] = useState(false);
   const [isAuto, setIsAuto] = useState(false);
   const [error, setError] = useState("");
+  const [pianoKey, setPianoKey] = useState(0); // force-remount key
 
   const { markDone } = useSongsPlayed();
 
-  // === Note range (now ends at B5 as requested) ===
+  // === Note range (ends at B5) ===
   const firstNote = MidiNumbers.fromNote("D4");
   const lastNote = MidiNumbers.fromNote("B5");
 
@@ -94,35 +95,25 @@ export default function PianoUI() {
     setActiveNotes(Array.from(s));
   };
 
-  // === Viewport width (for responsive sizing 500–650px => small) ===
-  const [vw, setVw] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth : 1024
+  /* ========= Responsive sizing: small mode when 700px–850px ========= */
+  const [winW, setWinW] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
   );
   useEffect(() => {
-    const onResize = () => setVw(window.innerWidth);
-    window.addEventListener("resize", onResize);
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
   }, []);
+  const isSmall = winW >= 700 && winW <= 850;
 
-  // === Sizing: width from white-key count (expand, scroll if needed) ===
-  const WHITE_KEY_PX_DEFAULT = 28;
-  const WHITE_KEY_PX_SMALL = 20; // smaller keys in 500–650px range
-  const MIN_W_DEFAULT = 850;
-  const MIN_W_SMALL = 520;
-
-  const isSmallBand = vw >= 700 && vw <= 850;
-
+  const WHITE_KEY_PX = isSmall ? 22 : 28;
   const whiteCount = useMemo(
     () => countWhiteKeys(firstNote, lastNote),
     [firstNote, lastNote]
   );
-
-  const perKeyPx = isSmallBand ? WHITE_KEY_PX_SMALL : WHITE_KEY_PX_DEFAULT;
-  const minWidth = isSmallBand ? MIN_W_SMALL : MIN_W_DEFAULT;
-
   const pianoWidth = useMemo(
-    () => Math.max(whiteCount * perKeyPx, minWidth),
-    [whiteCount, perKeyPx, minWidth]
+    () => Math.max(whiteCount * WHITE_KEY_PX, isSmall ? 560 : 850),
+    [whiteCount, WHITE_KEY_PX, isSmall]
   );
 
   /* ========= Audio init ========= */
@@ -183,7 +174,7 @@ export default function PianoUI() {
   const progressMapRef = useRef(buildInitialProgressMap());
 
   const stepProgressAll = (midiNumber) => {
-    const { note } = midiToPcOct(midiNumber); // e.g., "Db4"
+    const { note } = midiToPcOct(midiNumber);
     let winner = null;
 
     for (const { key, seq } of SEQS_NORM) {
@@ -206,7 +197,27 @@ export default function PianoUI() {
     return winner;
   };
 
-  /* ========= Autoplay (flip boolean on start) ========= */
+  /* ========= Helpers to end autoplay cleanly ========= */
+  const dispatchGlobalMouseUp = () => {
+    try {
+      const ev = new MouseEvent("mouseup", { bubbles: true });
+      window.dispatchEvent(ev);
+      document.dispatchEvent(ev);
+      document.body && document.body.dispatchEvent(ev);
+    } catch {}
+  };
+
+  const finishAutoplayCleanup = () => {
+    setIsAuto(false);
+    activeSetRef.current.clear();
+    setActiveNotes([]);
+    // Force a re-mount of the Piano to reset internal mouse state
+    setPianoKey((k) => k + 1);
+    // Also broadcast a mouseup in case React-Piano's window listeners are stuck
+    dispatchGlobalMouseUp();
+  };
+
+  /* ========= Autoplay ========= */
   const startAutoplayFor = (songKey) => {
     if (!started || !loaded || isAuto || !samplerRef.current) return;
 
@@ -214,10 +225,9 @@ export default function PianoUI() {
     if (!events?.length) return;
 
     setIsAuto(true);
-    // Flip the provider boolean as soon as autoplay begins
     markDone(songKey);
 
-    // Clear any previous schedule/part
+    // Clear any previous schedules
     if (schedIdRef.current !== null) {
       Tone.Transport.clear(schedIdRef.current);
       schedIdRef.current = null;
@@ -245,9 +255,6 @@ export default function PianoUI() {
     partRef.current = part;
 
     schedIdRef.current = Tone.Transport.scheduleOnce(() => {
-      setIsAuto(false);
-      activeSetRef.current.clear();
-      setActiveNotes([]);
       if (partRef.current) {
         partRef.current.dispose();
         partRef.current = null;
@@ -257,6 +264,7 @@ export default function PianoUI() {
         schedIdRef.current = null;
       }
       Tone.Transport.stop();
+      finishAutoplayCleanup();
     }, endSec);
 
     Tone.Transport.start();
@@ -270,7 +278,7 @@ export default function PianoUI() {
 
   const handlePlayNote = (midiNumber) => {
     if (!started || !loaded || !samplerRef.current) return;
-    if (isAuto) return;
+    if (isAuto) return; // ignore input during autoplay
 
     const noteName = toNoteName(midiNumber);
     samplerRef.current.triggerAttack(noteName, Tone.now());
@@ -281,7 +289,7 @@ export default function PianoUI() {
 
   const handleStopNote = (midiNumber) => {
     if (!started || !loaded || !samplerRef.current) return;
-    if (isAuto) return;
+    if (isAuto) return; // ignore input during autoplay
     const noteName = toNoteName(midiNumber);
     samplerRef.current.triggerRelease(noteName, Tone.now());
   };
@@ -299,6 +307,8 @@ export default function PianoUI() {
       }
       try { Tone.Transport.stop(); } catch {}
       try { samplerRef.current?.dispose(); } catch {}
+      // Make sure mouse state is clean on unmount
+      dispatchGlobalMouseUp();
     };
   }, []);
 
@@ -315,14 +325,18 @@ export default function PianoUI() {
 
       {/* Scroll container so wide ranges don't compress */}
       <div className="w-full overflow-x-auto">
-        <div className="inline-block">
+        <div
+          className="inline-block select-none"
+          onMouseLeave={dispatchGlobalMouseUp}
+        >
           <Piano
+            key={pianoKey}                         // <— Force remount after autoplay
             noteRange={{ first: firstNote, last: lastNote }}
             playNote={handlePlayNote}
             stopNote={handleStopNote}
             width={pianoWidth}
-            disabled={!started || !loaded}
             activeNotes={activeNotes}
+            playOnMouseOver={false}                // <— Prevent hover play
             renderNoteLabel={({ midiNumber }) => {
               const black = isBlackKey(midiNumber);
               return (

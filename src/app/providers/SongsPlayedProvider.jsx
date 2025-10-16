@@ -1,19 +1,35 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 
 const SongsPlayedContext = createContext(null);
 
 const STORAGE_KEY = "songsPlayed:v1";
+
+// ✅ Expanded state to include WaveText flags
 const DEFAULT_STATE = {
   song1: false,
   song2: false,
   song3: false,
   song4: false,
   song5: false,
+
+  // new flags for WaveText interactions
+  song1Wave: false,
+  song2Wave: false,
+  song3Wave: false,
+  song4Wave: false,
+  song5Wave: false,
 };
 
-// Small validator to guard against malformed storage
+// ✅ Guard against malformed or partial data in localStorage
 function normalize(obj) {
   if (!obj || typeof obj !== "object") return { ...DEFAULT_STATE };
   const out = { ...DEFAULT_STATE };
@@ -22,7 +38,7 @@ function normalize(obj) {
 }
 
 export function SongsPlayedProvider({ children }) {
-  // Lazy-init from localStorage (client only)
+  // ✅ Lazy init from localStorage (client only)
   const [played, setPlayed] = useState(() => {
     if (typeof window === "undefined") return { ...DEFAULT_STATE };
     try {
@@ -33,16 +49,16 @@ export function SongsPlayedProvider({ children }) {
     }
   });
 
-  // Persist on change
+  // ✅ Persist to localStorage on change
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(played));
     } catch {
-      // ignore write errors (e.g., private mode quota)
+      // ignore write errors (e.g., Safari private mode)
     }
   }, [played]);
 
-  // Cross-tab sync (optional but nice)
+  // ✅ Cross-tab synchronization
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === STORAGE_KEY && e.newValue) {
@@ -57,25 +73,27 @@ export function SongsPlayedProvider({ children }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // ✅ Utility methods
   const setSongPlayed = useCallback((key, value) => {
     setPlayed((prev) => ({ ...prev, [key]: Boolean(value) }));
   }, []);
 
   const markDone = useCallback((key) => {
     setPlayed((prev) => ({ ...prev, [key]: true }));
-    console.log(`${key} has been played`);
+    console.log(`${key} has been marked as true`);
   }, []);
 
   const resetAll = useCallback(() => {
     setPlayed({ ...DEFAULT_STATE });
   }, []);
 
+  // ✅ Memoized context value
   const value = useMemo(
     () => ({
-      played,          // { song1, song2, ... }
-      setSongPlayed,   // (key, bool)
-      markDone,        // (key) -> true
-      resetAll,        // reset all to false
+      played,        // object: all song + wave flags
+      setSongPlayed, // function(key, bool)
+      markDone,      // function(key)
+      resetAll,      // function()
     }),
     [played, setSongPlayed, markDone, resetAll]
   );
@@ -87,8 +105,10 @@ export function SongsPlayedProvider({ children }) {
   );
 }
 
+// ✅ Hook for use in components
 export function useSongsPlayed() {
   const ctx = useContext(SongsPlayedContext);
-  if (!ctx) throw new Error("useSongsPlayed must be used within <SongsPlayedProvider>");
+  if (!ctx)
+    throw new Error("useSongsPlayed must be used within <SongsPlayedProvider>");
   return ctx;
 }

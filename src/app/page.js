@@ -56,6 +56,11 @@ export default function Home() {
   const song4Played = played.song4;
   const song5Played = played.song5;
 
+  const song2Wave = played.song2Wave;
+  const song3Wave = played.song3Wave;
+  const song4Wave = played.song4Wave;
+  const song5Wave = played.song5Wave;
+
   // Keep your scroll-to-id behavior
   useEffect(() => {
     const id = sessionStorage.getItem("scrollTarget");
@@ -130,25 +135,25 @@ export default function Home() {
               {song2Played ? (
                 <WallaceCard />
               ) : (
-                <LockedCard clue={'My "Lightbulb" moment!'} />
+                <LockedCard clue={'My "Lightbulb" moment!'} found={song2Wave} notes={"C A# A C A# A C G"}/>
               )}
 
               {song3Played ? (
                 <MarioCard />
               ) : (
-                <LockedCard clue={"Something you should know about me, I like games!"} />
+                <LockedCard clue={"Something you should know about me, I like games!"} found={song3Wave} notes={"E E E C E G lowG"}/>
               )}
 
               {song4Played ? (
                 <ChocoboCard />
               ) : (
-                <LockedCard clue={"Try very hard to be mean :("} />
+                <LockedCard clue={"Try very hard to be mean :("} found={song4Wave} notes={"D B G E D B G B G B"}/>
               )}
 
               {song5Played ? (
                 <EntertainerCard />
               ) : (
-                <LockedCard clue={"this website is one of my projects!"} />
+                <LockedCard clue={"this website is one of my projects!"} found={song5Wave} notes={"D D# E C E C E C"}/>
               )}
             </div>
           )}
@@ -162,12 +167,12 @@ export default function Home() {
               className="w-full mt-16 flex flex-row flex-wrap items-stretch justify-center gap-6"
             >
               <SkillsCard title="Core Web" items={["HTML5", "CSS", "Typescript", "TailwindCSS"]} />
-              <SkillsCard title="Languages" items={["JavaScript", "Python", "C#", "Lua"]} />
+              <SkillsCard title="Languages" items={["JavaScript", "Python", "C#", "Lua", "Java"]} />
               <SkillsCard title="Front-End Frameworks" items={["React", "Vue.js", "Angular"]} />
               <SkillsCard title="Full-Stack" items={["Next.js", "ASP.NET Core MVC", "Node.js", "RESTful APIs"]} />
-              <SkillsCard title="Back-End & ORMs" items={["Express.js", ".NET", "Prisma", "Entity Framework"]} />
+              <SkillsCard title="Back-End & ORMs" items={["Express.js", ".NET", "Prisma", "Entity Framework", "Spring"]} />
               <SkillsCard title="Databases & Data Platforms" items={["MySQL", "MongoDB", "Supabase"]} />
-              <SkillsCard title="Tools & Platforms" items={["GitHub", "Git Bash", "VS Code", "Postman", "Vercel", "Unity"]} />
+              <SkillsCard title="Tools & Platforms" items={["GitHub", "Git Bash", "VS Code", "Postman", "Vercel", "Unity", "Android Studio"]} />
             </section>
 
             <section id="contact" className="w-full mt-16">

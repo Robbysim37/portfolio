@@ -120,6 +120,7 @@ export default function HomeSection({ expanded = false }) {
                   duration={1.6}
                   className="whitespace-nowrap text-[var(--primary)] font-semibold text-sm md:text-base"
                   letterClassName="px-1"
+                  flagKey={"song2Wave"}
                 />
               </motion.div>
             )}

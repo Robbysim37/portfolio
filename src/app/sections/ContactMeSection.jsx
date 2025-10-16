@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import WaveText from "@/components/WaveText";
 import WordCycler from "@/components/WordCycler";
 
 export const openEmail = () => {
@@ -98,7 +99,7 @@ export default function ContactMe() {
           ref={jumperRef}
           className="w-fit mx-auto z-20 flex flex-col items-center gap-2"
           animate={{ x: pos.x, y: pos.y }}
-          transition={{ type: "spring", stiffness: 420, damping: 24 , delay:.035}}
+          transition={{ type: "spring", stiffness: 420, damping: 24 , delay:.075}}
           onHoverStart={handleHoverStart}
           whileHover={{ scale: 1.03 }}
         >
@@ -117,6 +118,7 @@ export default function ContactMe() {
               className="text-xl font-semibold text-primary"
               delay={0.08}
               duration={1.2}
+              flagKey={"song4Wave"}
             />
           ) : (
             hits > 0 && (
@@ -128,35 +130,5 @@ export default function ContactMe() {
         </motion.div>
       </div>
     </section>
-  );
-}
-
-/* ===== Inline WaveText component (from your snippet) ===== */
-function WaveText({
-  text,
-  delay = 0.1,
-  duration = 1.5,
-  className = "text-foreground font-sans",
-  letterClassName = "",
-}) {
-  const groups = text.split(" ");
-  return (
-    <div className={`flex gap-2 ${className}`}>
-      {groups.map((group, i) => (
-        <motion.span
-          key={`${group}-${i}`}
-          animate={{ y: [0, -10, 0] }}
-          transition={{
-            repeat: Infinity,
-            duration,
-            ease: "easeInOut",
-            delay: i * delay,
-          }}
-          className={`inline-block ${letterClassName}`}
-        >
-          {group}
-        </motion.span>
-      ))}
-    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Card,CardTitle,CardContent } from "@/components/ui/card"
+import WaveText from "@/components/WaveText"
 
 export default function LockedCard(props) {
     return(
@@ -7,7 +8,7 @@ export default function LockedCard(props) {
             <p className="text-4xl text-center">🔒</p><h2 className="text-2x1 text-center">Song not yet played...</h2>
             </CardTitle>
             <CardContent>
-            <p className="text-center">{props.clue}</p>
+            { props.found ? <WaveText text={props.notes}></WaveText> : <p className="text-center">{props.clue}</p>}
             </CardContent>
         </Card>
     )

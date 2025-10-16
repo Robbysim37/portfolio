@@ -56,32 +56,32 @@ export function ModalProvider({ children }) {
           <Card className="w-[66%] h-max-[100vh] shadow-none border-none">
             <CardHeader>
               <CardTitle>
-                <h1 className="text-[14px]">Welcome!</h1>
+                <h1 className="text-[14px] md:text-[20px]">Welcome!</h1>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-[12px]">
-                <p className="text-[12px]">
+              <div className="text-[12px] md:text-base">
+                <p className="text-[12px] md:text-base">
                   If you're reading this, you've come across the portfolio
                   website of Robert Lewis. If you'll indulge me, I would love to
                   show you my works in a professional, but fun way.
                 </p>
                 <br className="mb-16" />
-                <p className="text-[12px]">
+                <p className="text-[12px] md:text-base">
                   You'll notice once this dialog is closed, you will only see a
                   piano. Once you've played a certain song{" "}
-                  <span className="text-[12px] font-bold">(don't worry, I will give you the notes)</span>{" "}
+                  <span className="text-[12px] md:text-base font-bold">(don't worry, I will give you the notes)</span>{" "}
                   you will gain access to the rest of the site.
                 </p>
                 <br className="mb-16" />
-                <p className="text-[12px]">
+                <p className="text-[12px] md:text-base">
                   From there, you can look through my projects, learn about me,
                   and contact me if that is all you want to do... But I have
                   hidden some more easter eggs around the site that revolve
                   around this piano. Can you find them all?
                 </p>
                 <br className="mb-16" />
-                <p className="text-[12px]">
+                <p className="text-[12px] md:text-base">
                   Thank you again for visiting my site, and I hope to hear from
                   you soon! Good luck!
                 </p>

@@ -7,7 +7,7 @@ export default function ZeldaCard() {
             <p className="text-4xl text-center">🔑</p><h2 className="text-2x1 text-center">You've unlocked the website!</h2>
             </CardTitle>
             <CardContent>
-            <p className="text-center">Now it's time to go explore and see what else you can find!</p>
+            <p className="text-center">Now it's time to go explore and see what else you can find! Songs you find will appear in this section.</p>
             </CardContent>
         </Card>
     )
