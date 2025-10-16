@@ -107,17 +107,16 @@ export default function Home() {
           id="piano"
           className="w-full h-fit flex flex-col justify-center items-center mt-32"
         >
-          <Card className="h-fit w-fit">
-            <CardContent className="w-fit h-fit">
+          <div className="h-fit w-fit">
               <p className="flex [@media(min-width:700px)]:hidden">
                 Rotate your device to landscape mode!
               </p>
               <FcRotateToLandscape size={48} className="text-center w-full [@media(min-width:700px)]:hidden"/>
+
               <div className="hidden [@media(min-width:700px)]:block">
                 <PianoUI />
               </div>
-            </CardContent>
-          </Card>
+          </div>
 
           {!isUnlocked && (
             <WaveText className="mt-16 text-4xl space-x-4" text={"G A B C#"} />
