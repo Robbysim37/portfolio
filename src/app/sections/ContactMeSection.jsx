@@ -1,31 +1,49 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import WaveText from "@/components/WaveText";
 import WordCycler from "@/components/WordCycler";
 
 export const openEmail = () => {
-    window.open("https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=Robbysim37@gmail.com")
-}
+  window.open("https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=Robbysim37@gmail.com");
+};
 
 export const downloadResume = () => {
-    let link = document.createElement("a");
-    link.download = "Robert Lewis Resume";
-    link.href = "/RobertLewisResume.pdf";
-    link.click();
-    link.remove();
-}
+  // Put RobertLewisResume.pdf in /public
+  const link = document.createElement("a");
+  link.download = "Robert Lewis Resume";
+  link.href = "/RobertLewisResume.pdf";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
 
 export default function ContactMe() {
-  
   const sectionRef = useRef(null);
   const jumperRef = useRef(null);
   const cooldownRef = useRef(false);
 
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [hits, setHits] = useState(0);
+
+  // ---- detect "mobile view" (small screen + no hover capability) ----
+  const [isMobileView, setIsMobileView] = useState(false);
+  useEffect(() => {
+    const mqHoverNone = window.matchMedia("(hover: none)");
+    const mqMaxWidth = window.matchMedia("(max-width: 768px)");
+
+    const update = () => setIsMobileView(mqHoverNone.matches && mqMaxWidth.matches);
+    update();
+
+    mqHoverNone.addEventListener?.("change", update);
+    mqMaxWidth.addEventListener?.("change", update);
+    return () => {
+      mqHoverNone.removeEventListener?.("change", update);
+      mqMaxWidth.removeEventListener?.("change", update);
+    };
+  }, []);
 
   // Compute random offsets, but restrict by 75 px padding per side
   const pickRandomOffsets = () => {
@@ -38,14 +56,8 @@ export default function ContactMe() {
     const cRect = container.getBoundingClientRect();
     const jRect = jumper.getBoundingClientRect();
 
-    const usableWidth = Math.max(
-      0,
-      cRect.width - jRect.width - edgeBuffer * 2 - padding * 2
-    );
-    const usableHeight = Math.max(
-      0,
-      cRect.height - jRect.height - edgeBuffer * 2 - padding * 2
-    );
+    const usableWidth = Math.max(0, cRect.width - jRect.width - edgeBuffer * 2 - padding * 2);
+    const usableHeight = Math.max(0, cRect.height - jRect.height - edgeBuffer * 2 - padding * 2);
 
     const x = Math.random() * usableWidth - usableWidth / 2;
     const y = Math.random() * usableHeight - usableHeight / 2;
@@ -60,6 +72,12 @@ export default function ContactMe() {
     cooldownRef.current = true;
     nextRandom();
     setTimeout(() => (cooldownRef.current = false), 150);
+  };
+
+  // NEW: on mobile view, clicking the red button also triggers the jump
+  const handleDenyClick = () => {
+    if (isMobileView) handleHoverStart(); // jump on tap (mobile only)
+    setHits((n) => n + 1);
   };
 
   // start centered; recenter on resize
@@ -92,21 +110,21 @@ export default function ContactMe() {
         </h2>
 
         <Button onClick={openEmail} size="lg">Email me!</Button>
-        <Button onClick={downloadResume}size="lg">Resume</Button>
+        <Button onClick={downloadResume} size="lg">Resume</Button>
 
-        {/* Jumper wrapper: stays in the column, shrink-wraps to Button, and includes the counter/message below */}
+        {/* Jumper wrapper */}
         <motion.div
           ref={jumperRef}
           className="w-fit mx-auto z-20 flex flex-col items-center gap-2"
           animate={{ x: pos.x, y: pos.y }}
-          transition={{ type: "spring", stiffness: 420, damping: 24 , delay:.075}}
-          onHoverStart={handleHoverStart}
+          transition={{ type: "spring", stiffness: 420, damping: 24, delay: 0.075 }}
+          onHoverStart={handleHoverStart}            // desktop "hover to jump"
           whileHover={{ scale: 1.03 }}
         >
           <Button
             size="lg"
             variant="destructive"
-            onClick={() => setHits((n) => n + 1)}
+            onClick={handleDenyClick}                // mobile "tap to jump"
           >
             I don&apos;t want to work with you!
           </Button>
